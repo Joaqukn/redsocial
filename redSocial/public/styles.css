@@ -1,0 +1,771 @@
+/* Global UI: variables, animated background, navbar, cards, forms, buttons, responsive */
+
+:root{
+	/* Palette */
+	--bg-1: #071022;
+	--bg-2: #081430;
+	--accent-1: #06b6d4; /* cyan */
+	--accent-2: #7c3aed; /* violet */
+	--muted: #98a3b3;
+	--glass: rgba(255,255,255,0.06);
+	--card-radius: 14px;
+	--soft-shadow: 0 8px 36px rgba(3,6,18,0.6);
+	--elev-shadow: 0 18px 80px rgba(7,12,30,0.65);
+	--transition: 320ms cubic-bezier(.2,.9,.2,1);
+	--nav-height: 56px;
+}
+
+/* Base */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;color:#e7f6ff;background:linear-gradient(160deg,var(--bg-1) 0%, var(--bg-2) 60%);-webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
+
+
+body::before, body::after{
+	content:""; position:fixed; pointer-events:none; z-index:0;
+	width:70vmax; height:70vmax; border-radius:50%;
+	filter: blur(90px); opacity:0.85;
+}
+body::before{ left:-25vmax; top:-30vmax;
+	background: radial-gradient(circle at 30% 30%, rgba(124,58,237,0.16), transparent 25%), radial-gradient(circle at 70% 70%, rgba(6,182,212,0.09), transparent 25%);
+	animation: blobMove1 8s ease-in-out infinite alternate;
+}
+body::after{ right:-30vmax; bottom:-28vmax;
+	background: radial-gradient(circle at 30% 30%, rgba(6,182,212,0.12), transparent 25%), radial-gradient(circle at 70% 70%, rgba(124,58,237,0.08), transparent 25%);
+	animation: blobMove2 10s ease-in-out infinite alternate;
+}
+@keyframes blobMove1{ from{transform:translateY(0) rotate(0)} to{transform:translateY(6vh) rotate(12deg)} }
+@keyframes blobMove2{ from{transform:translateY(0) rotate(0)} to{transform:translateY(-6vh) rotate(-8deg)} }
+
+/* Navbar */
+nav{
+	position:fixed; top:0; left:0; right:0; height:var(--nav-height);
+	display:flex; align-items:center; justify-content:space-between; gap:12px;
+	padding:8px 20px; z-index:40;
+	background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+	backdrop-filter: blur(8px) saturate(120%);
+	box-shadow: 0 6px 20px rgba(2,6,20,0.5);
+	border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+nav .brand{
+	font-weight:900;
+	font-size:1.12rem; /* un poco más grande */
+	letter-spacing:0.6px;
+	padding-left:6px;
+	position:relative;
+	display:inline-flex;
+	align-items:center;
+	gap:8px;
+}
+/* pequeño diamante decorativo antes del texto (no importa si ya usas emoji) */
+nav .brand::before{
+	content: "";
+	width:8px; height:8px; border-radius:2px;
+	background: linear-gradient(135deg,var(--accent-1),var(--accent-2));
+	box-shadow: 0 4px 12px rgba(124,58,237,0.18);
+	display:inline-block;
+	transform: translateY(-1px);
+}
+nav .nav-left, nav .nav-right{display:flex;gap:10px;align-items:center}
+nav a, nav button{ color:#dff6ff; text-decoration:none; font-weight:700; background:transparent; border:0; cursor:pointer; }
+
+/* Layout containers */
+.container, .feed, .auth-container, .create-post-section{
+	max-width:1000px; margin:calc(var(--nav-height) + 28px) auto; padding:18px; position:relative; z-index:10;
+}
+
+/* Feed */
+.feed{ max-width:760px; margin-top:calc(var(--nav-height) + 36px); }
+.post-list{ display:grid; gap:20px; grid-template-columns: 1fr; }
+
+/* Card */
+.card, .post-card, .auth-card{
+	background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+	border-radius: var(--card-radius);
+	padding:14px;
+	box-shadow: var(--soft-shadow);
+	border:1px solid rgba(255,255,255,0.03);
+	backdrop-filter: blur(6px) saturate(110%);
+	transition: transform var(--transition), box-shadow var(--transition);
+}
+.post-card:hover{ transform:translateY(-6px); box-shadow: var(--elev-shadow); }
+
+/* Post header */
+.post-header{ display:flex; align-items:center; justify-content:space-between; gap:12px }
+.post-avatar{ width:44px; height:44px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:800; color:#021221; background:linear-gradient(90deg,var(--accent-1),var(--accent-2)); box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+
+/* Post content */
+.post-content p{ margin:10px 0; color:#dff2ff; line-height:1.5; }
+.post-image{ width:100%; border-radius:12px; max-height:420px; object-fit:cover; }
+
+/* Actions */
+.post-actions{ display:flex; gap:10px; margin-top:12px; }
+.post-actions button{ background:transparent; border:1px solid rgba(255,255,255,0.03); color:var(--accent-1); padding:8px 12px; border-radius:999px; font-weight:800; cursor:pointer; transition: transform var(--transition); }
+.post-actions button:hover{ transform:translateY(-3px); color:var(--accent-2); }
+
+/* Comments */
+.comments{ margin-top:12px; padding:12px; border-radius:12px; background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.02); color:var(--muted) }
+.comments ul{ margin:8px 0 12px; padding-left:16px }
+
+/* Auth forms */
+.auth-card{
+	max-width:460px; margin:24px auto; padding:22px; text-align:left;
+}
+.auth-form{ display:flex; flex-direction:column; gap:12px }
+.input-with-icon{ display:flex; align-items:center; gap:12px; background: rgba(10,14,20,0.6); padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.02); }
+.input-with-icon i{ color:var(--accent-1); min-width:28px; text-align:center }
+.input-with-icon input{ flex:1; background:transparent; border:0; outline:none; color:#e6f7ff; font-weight:600 }
+.password-wrapper{ position:relative }
+.password-toggle{ position:absolute; right:8px; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:linear-gradient(135deg,var(--accent-1),var(--accent-2)); color:#07121a; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 12px 28px rgba(0,0,0,0.45); }
+
+/* Buttons */
+.btn, .primary {
+  min-height: 44px;
+  line-height: 1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:12px 16px;
+  border-radius:12px;
+  font-weight:800;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition: box-shadow 260ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease, transform 260ms ease;
+  will-change: box-shadow, transform;
+}
+.btn:hover, .btn:focus-visible {
+  transform: none; /* no mover */
+  box-shadow: 0 28px 80px rgba(2,6,23,0.55);
+  outline: none;
+}
+.btn::after{
+  content: "";
+  position: absolute;
+  left: -60%;
+  top: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(120deg, rgba(255,255,255,0.06), rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+  transform: skewX(-18deg);
+  transition: left 420ms cubic-bezier(.2,.9,.2,1), opacity 260ms ease;
+  opacity: 0;
+  pointer-events: none;
+}
+.btn:hover::after, .btn:focus-visible::after { left: 100%; opacity: 1; }
+.btn:active { transform: scale(.997); }
+.btn.loading { pointer-events: none; opacity: 0.92; }
+
+/* press flash overlay (reusable para botones y toggles) */
+.btn::before,
+.password-toggle::before{
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	opacity: 0;
+	border-radius: inherit;
+	background: linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+	transform: scale(1.02);
+	transition: opacity 220ms ease;
+	z-index: 5;
+}
+
+/* press animation triggered on :active (fast flash) */
+@keyframes pressFlash {
+	from { opacity: 0; transform: scale(0.98); }
+	50% { opacity: 0.95; transform: scale(1.00); }
+	to { opacity: 0; transform: scale(1.02); }
+}
+
+/* apply flash on active */
+.btn:active::before,
+.password-toggle:active::before {
+	animation: pressFlash 360ms ease forwards;
+	opacity: 1;
+}
+
+/* ensure password-toggle doesn't move and is visually stable */
+.password-toggle{
+	/* ...existing properties... */
+	transform: none !important;
+	transition: box-shadow 180ms ease, opacity 120ms ease;
+}
+
+/* no translate on hover/focus for buttons globally (only shadow/sheens) */
+.btn:hover, .btn:focus-visible {
+	transform: none !important;
+}
+
+/* ensure fixed button sizing so layout doesn't jump */
+.btn, .password-toggle{
+	min-width: 44px;
+	min-height: 44px;
+	line-height: 1;
+	box-sizing: border-box;
+}
+
+/* Small utilities */
+.hint-shimmer{ background:linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.12), rgba(255,255,255,0.04)); background-size:200% 100%; -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation: shimmer 4s linear infinite; }
+@keyframes shimmer{ from{background-position:0% 50%} to{background-position:200% 50%} }
+
+/* Responsive */
+@media (min-width:900px){
+	.post-list{ grid-template-columns: repeat(2,1fr) }
+}
+@media (max-width:720px){
+	.container{ padding:12px }
+	.auth-card{ margin:40px 12px }
+	.nav-left a{ font-size:0.95rem }
+}
+
+/* Card-style auth (login / register) */
+.auth-container{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height: calc(100vh - var(--nav-height));
+  padding: 20px;
+  box-sizing: border-box;
+}
+.auth-card{
+  width: min(520px, 92vw);
+  border-radius: 16px;
+  padding: 22px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.035);
+  box-shadow: 0 30px 90px rgba(2,6,23,0.65);
+  overflow: visible;
+  transform-origin: center;
+  animation: cardIn 420ms cubic-bezier(.2,.9,.2,1);
+}
+
+/* subtle entrance for auth cards */
+@keyframes cardIn {
+  from { opacity:0; transform: translateY(18px) scale(0.99); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+
+/* Inputs / form cosmetics used by auth pages */
+.auth-form { display:flex; flex-direction:column; gap:12px; }
+.auth-input, .auth-form input, .auth-form textarea {
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.04);
+  background: rgba(10,14,20,0.6);
+  color:#e8f7ff;
+  outline:none;
+  box-shadow: inset 0 -6px 18px rgba(0,0,0,0.45);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+.auth-input:focus { box-shadow: 0 12px 36px rgba(6,182,212,0.06); transform: translateY(-2px); }
+
+/* password wrapper safe spacing */
+.password-wrapper input { padding-right:84px; }
+
+/* -------------------- ANIMATION UTILITIES -------------------- */
+/* Small reusable animations */
+.fade-in { animation: fadeIn 420ms cubic-bezier(.2,.9,.2,1) both; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity:1; transform:none; } }
+
+.slide-up { animation: slideUp 420ms cubic-bezier(.2,.9,.2,1) both; }
+@keyframes slideUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform:none; } }
+
+.pop-in { animation: popIn 420ms cubic-bezier(.25,.9,.2,1) both; }
+@keyframes popIn { from { opacity:0; transform: scale(.98) translateY(8px); } 60% { transform: scale(1.02) } to { opacity:1; transform: scale(1) } }
+
+.pulse { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.03) } }
+
+/* Staggered list helper */
+.stagger > * { opacity:0; transform: translateY(8px); animation: listShow 520ms cubic-bezier(.2,.9,.2,1) forwards; }
+.stagger > *:nth-child(1){ animation-delay: 0.04s; }
+.stagger > *:nth-child(2){ animation-delay: 0.08s; }
+.stagger > *:nth-child(3){ animation-delay: 0.12s; }
+.stagger > *:nth-child(4){ animation-delay: 0.16s; }
+@keyframes listShow { to { opacity:1; transform:none } }
+
+/* -------------------- POSTS CENTERED (Facebook-like) -------------------- */
+.feed {
+	/* ensures feed is centered and content column is centered */
+	display:flex;
+	justify-content:center;
+	padding: 10px 16px;
+}
+.posts-column {
+	width:100%;
+	max-width:760px;
+	display:flex;
+	flex-direction:column;
+	gap:18px;
+}
+
+/* Post-card specifics (ensure all posts use .post-card for consistent look + animation) */
+.post-card{
+	/* make sure post-card uses same card style */
+	/* ...existing card styles apply; we add entrance */
+	animation: fadeIn 420ms cubic-bezier(.2,.9,.2,1) both;
+}
+
+/* Small helper for timelines and empty state */
+.center-empty{ display:flex; align-items:center; justify-content:center; padding:36px; color:var(--muted) }
+
+.auth-form button {
+  background-color: #00c3ff;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.auth-form button:hover {
+  background-color: #009ecc;
+}
+
+.auth-container p {
+  margin-top: 15px;
+  font-size: 0.95em;
+}
+
+.auth-container a {
+  color: #00c3ff;
+  text-decoration: none;
+}
+
+
+
+/* Post-card specifics (ensure all posts use .post-card for consistent look + animation) */
+.post-card{
+	/* make sure post-card uses same card style */
+	/* ...existing card styles apply; we add entrance */
+	animation: fadeIn 420ms cubic-bezier(.2,.9,.2,1) both;
+}
+
+/* Small helper for timelines and empty state */
+.center-empty{ display:flex; align-items:center; justify-content:center; padding:36px; color:var(--muted) }
+
+.auth-form button {
+  background-color: #00c3ff;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.auth-form button:hover {
+  background-color: #009ecc;
+}
+
+.auth-container p {
+  margin-top: 15px;
+  font-size: 0.95em;
+}
+
+.auth-container a {
+  color: #00c3ff;
+  text-decoration: none;
+}
+
+.auth-container a:hover {
+  text-decoration: underline;
+}
+
+/* Enlace "Volver" (footer-back) */
+.back-link{
+  display:inline-block;
+  margin:28px auto 48px;
+  color:var(--accent-2);
+  text-decoration:underline;
+  font-weight:700;
+  text-align:center;
+  padding:8px 12px;
+  border-radius:8px;
+  transition: color 200ms ease, background 200ms ease;
+}
+.back-link:hover{ background: rgba(124,58,237,0.06); color:var(--accent-1); }
+
+a { color:#5cc6ff; text-decoration:none; }
+button { cursor:pointer; }
+
+.posts-container {
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  max-width:600px;
+  margin:20px auto;
+}
+
+.post-card {
+  background:#121b22;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 0 10px rgba(0,0,0,0.25);
+}
+
+.post-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.post-avatar {
+  width:42px; height:42px;
+  background:#0078ff;
+  color:white;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  font-size:1.1rem;
+}
+
+.user-name { font-weight:700; color:#e8f7ff; }
+.post-date { color:#aaa; font-size:0.85rem; }
+
+.post-controls button {
+  background:none;
+  border:none;
+  color:#ff8080;
+  font-size:1rem;
+}
+
+.post-content img {
+  width:100%;
+  border-radius:12px;
+  margin-top:8px;
+}
+
+.like-btn, .focus-comment {
+  background:none;
+  border:none;
+  color:#5cc6ff;
+  font-weight:bold;
+  transition:transform 0.2s;
+}
+
+.like-btn:hover, .focus-comment:hover { transform:scale(1.2); }
+
+.comments {
+  margin-top:10px;
+  background:rgba(255,255,255,0.05);
+  padding:8px;
+  border-radius:10px;
+}
+
+.comment-item {
+  background:rgba(255,255,255,0.07);
+  border-radius:8px;
+  padding:6px;
+  margin:4px 0;
+}
+
+.comment-form {
+  display:flex;
+  gap:6px;
+  margin-top:8px;
+}
+
+.comment-form input {
+  flex:1;
+  border:none;
+  background:rgba(0,0,0,0.3);
+  color:white;
+  border-radius:8px;
+  padding:6px;
+}
+
+.comment-form button {
+  background:#5cc6ff;
+  border:none;
+  color:#021221;
+  padding:6px 10px;
+  border-radius:8px;
+  font-weight:bold;
+}
+
+.main-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: calc(var(--nav-height) + 20px); /* 🔹 margen fijo debajo de navbar */
+  padding-bottom: 60px; /* espacio inferior para scroll */
+}
+
+/* --- Botón crear publicación fijo --- */
+.create-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.create-btn.fixed {
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  color: white;
+  border: none;
+  padding: 14px 18px;
+  border-radius: 50px;
+  font-weight: bold;
+  font-size: 1.05rem;
+  text-decoration: none;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  z-index: 200;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.create-btn.fixed:hover {
+  transform: scale(1.08);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+
+/* --- Contenedor de publicaciones --- */
+.posts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 620px;
+  margin-top: 30px;
+  padding: 0 20px 80px; /* 🔹 padding inferior para no chocar con el botón */
+  box-sizing: border-box;
+}
+
+/* --- Tarjetas de publicaciones --- */
+.post-card {
+  background: rgba(18, 27, 34, 0.95);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.25);
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Ajustes visuales menores --- */
+.center-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.post-content img {
+  width: 100%;
+  border-radius: 12px;
+  margin-top: 8px;
+  object-fit: cover;
+}
+
+/* --- Mantiene el fondo sin afectar su posición por el scroll --- */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.85;
+}
+
+.page-title {
+  margin-top: calc(var(--nav-height) + 20px);
+  text-align: center;
+  font-size: 1.8rem;
+  color: #dff2ff;
+}
+
+/* ================= POPUP 3 PUNTOS ================= */
+.post-controls {
+  position: relative;
+  display: inline-block;
+}
+
+.more-btn {
+  background: #0d1117;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.more-btn:hover {
+  background: #161b22;
+}
+
+.popup-options {
+  display: none;
+  position: absolute;
+  top: 2rem;
+  right: 0;
+  background: linear-gradient(145deg, #1c1f29, #2a2d3a);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 10;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+  transition: all 0.25s ease;
+}
+
+.popup-options.active {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.popup-options button {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+
+.popup-options button:hover {
+  background: #3a3f55;
+  color: #ffd966;
+}
+
+/* ================= MODAL GENERAL ================= */
+.modal-overlay {
+  position: fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background: rgba(0,0,0,0.7);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  opacity:0;
+  pointer-events:none;
+  transition: opacity 0.3s ease;
+  z-index: 100;
+}
+
+.modal-overlay.active {
+  opacity:1;
+  pointer-events:auto;
+}
+
+.modal {
+  background: linear-gradient(145deg, #1c1f29, #2a2d3a);
+  color:#fff;
+  padding: 25px 20px;
+  border-radius: 20px;
+  min-width: 320px;
+  max-width: 420px;
+  transform: translateY(-20px) scale(0.95);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  opacity: 0;
+}
+
+.modal-overlay.active .modal {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.modal h3 {
+  margin-top:0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.modal p {
+  margin-bottom: 15px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #d1d5db;
+}
+
+.modal input, .modal textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #10121a;
+  color: #fff;
+  margin-bottom: 10px;
+  resize: none;
+  font-size: 0.95rem;
+}
+
+.modal input:focus, .modal textarea:focus {
+  outline: 2px solid #ffd966;
+}
+
+.modal button {
+  margin-top: 10px;
+  padding: 10px 16px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.modal button.confirm {
+  background: #ff5e5e;
+  color:#fff;
+}
+
+.modal button.confirm:hover {
+  background: #ff7979;
+}
+
+.modal button.cancel {
+  background: #5e80ff;
+  color:#fff;
+  margin-left:10px;
+}
+
+.modal button.cancel:hover {
+  background: #7891ff;
+}
+
+/* ================= COMENTARIOS ================= */
+.comment-item {
+  margin-bottom: 6px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: #10121a;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+
+  

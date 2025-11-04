@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Perfil</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    form { max-width: 400px; margin: auto; display: flex; flex-direction: column; gap: 10px; }
+    img { max-width: 150px; border-radius: 50%; margin-bottom: 10px; }
+    input, button { padding: 8px; font-size: 16px; }
+    button { cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Editar Perfil</h1>
+
+  <div id="profile-container">
+    <img id="avatarPreview" src="" alt="Avatar">
+    <form id="profileForm">
+      <input type="text" id="username" placeholder="Nombre de usuario" required>
+      <input type="email" id="email" placeholder="Correo electrónico" required>
+      <input type="password" id="password" placeholder="Nueva contraseña (opcional)">
+      <input type="file" id="avatar" accept="image/*">
+      <button type="submit">Guardar cambios</button>
+    </form>
+  </div>
+
+  <script>
+    const userId = 1; // <--- reemplaza con el id del usuario logueado
+
+    const usernameInput = document.getElementById('username');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const avatarInput = document.getElementById('avatar');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const form = document.getElementById('profileForm');
+
+    // Cargar perfil
+    async function loadProfile() {
+      try {
+        const res = await fetch(`http://localhost:3000/api/users/${userId}`);
+        if (!res.ok) throw new Error('No se pudo cargar el perfil');
+        const user = await res.json();
+
+        usernameInput.value = user.username;
+        emailInput.value = user.email;
+        avatarPreview.src = user.avatar || 'https://via.placeholder.com/150';
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // Preview de avatar al seleccionar
+    avatarInput.addEventListener('change', () => {
+      const file = avatarInput.files[0];
+      if (file) {
+        avatarPreview.src = URL.createObjectURL(file);
+      }
+    });
+
+    // Guardar cambios
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append('username', usernameInput.value);
+      formData.append('email', emailInput.value);
+      if (passwordInput.value) formData.append('password', passwordInput.value);
+      if (avatarInput.files[0]) formData.append('avatar', avatarInput.files[0]);
+
+      try {
+        const res = await fetch(`http://localhost:3000/api/users/${userId}`, {
+          method: 'PUT',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Error al actualizar perfil');
+
+        alert('Perfil actualizado correctamente');
+        passwordInput.value = '';
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // Inicializar
+    loadProfile();
+  </script>
+</body>
+</html>
