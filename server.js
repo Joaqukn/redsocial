@@ -21,6 +21,30 @@ app.use(express.json());
 app.use(compression());
 app.use(express.static('public', { maxAge: '1d' }));
 
+
+// ======== ⚙️ Configuración de Middleware ========
+app.use(cors());
+app.use(express.json());
+app.use(compression());
+
+// 🔥 Evita que cualquier respuesta se guarde en caché
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
+// 🔥 Servir archivos estáticos sin caché
+app.use(express.static('public', {
+  etag: false,
+  lastModified: false,
+  maxAge: 0,
+  cacheControl: false
+}));
+
+
+
 // === CONEXIÓN A MONGODB ===
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
@@ -244,6 +268,7 @@ app.get('/api/posts/:id', async (req, res) => {
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
 
 // === INICIO SERVIDOR ===
 const PORT = process.env.PORT || 3000;
