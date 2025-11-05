@@ -77,17 +77,32 @@ nav a, nav button{ color:#dff6ff; text-decoration:none; font-weight:700; backgro
 .feed{ max-width:760px; margin-top:calc(var(--nav-height) + 36px); display:flex; justify-content:center; }
 .posts-column{ width:100%; display:flex; flex-direction:column; gap:18px; }
 
-/* ==================== CARDS ==================== */
-.card, .post-card, .auth-card{
-	background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-	border-radius: var(--card-radius);
-	padding:14px;
-	box-shadow: var(--soft-shadow);
-	border:1px solid rgba(255,255,255,0.03);
-	transition: transform var(--transition), box-shadow var(--transition);
-	backdrop-filter: blur(2px); /* ✅ Reducción para rendimiento */
+/* ==================== CENTRAR CARDS Y CONTROLAR TAMAÑO ==================== */
+.auth-card, .post-card, .card {
+  max-width: 420px;   /* tamaño máximo deseado */
+  width: 90%;         /* responsive para pantallas chicas */
+  margin: 0 auto;     /* centrado horizontal */
 }
-.post-card:hover{ transform:none; box-shadow: var(--elev-shadow); }
+
+.auth-form input, .auth-form textarea {
+  max-width: 100%;    /* no permitir que se agrande más del contenedor */
+  box-sizing: border-box; /* incluye padding y border en width */
+}
+
+.post-content img {
+  max-width: 100%;    /* que no sobrepase el contenedor */
+  height: auto;       /* mantener proporción */
+  border-radius: 12px;
+  display: block;     /* quitar inline que puede afectar layout */
+  margin: 0 auto;     /* centrar imagen */
+}
+
+/* Ajuste para contenedor general de posts */
+.posts-container {
+  max-width: 760px;
+  width: 95%;
+  margin: calc(var(--nav-height) + 36px) auto;
+}
 
 /* ==================== POST HEADER ==================== */
 .post-header{ display:flex; align-items:center; justify-content:space-between; gap:12px }
