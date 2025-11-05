@@ -1,218 +1,455 @@
-/* ==================== GLOBAL VARIABLES ==================== */
-:root{
-	--bg-1: #071022;
-	--bg-2: #081430;
-	--accent-1: #06b6d4;
-	--accent-2: #7c3aed;
-	--muted: #98a3b3;
-	--card-radius: 14px;
-	--soft-shadow: 0 6px 18px rgba(0,0,0,0.25);
-	--elev-shadow: 0 12px 36px rgba(7,12,30,0.5);
-	--transition: 320ms cubic-bezier(.2,.9,.2,1);
-	--nav-height: 56px;
+/* ==================== VARIABLES GLOBALES ==================== */
+:root {
+  --bg-1: #071022;
+  --bg-2: #081430;
+  --accent-1: #06b6d4;
+  --accent-2: #7c3aed;
+  --muted: #98a3b3;
+  --card-radius: 14px;
+  --soft-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  --elev-shadow: 0 12px 36px rgba(7,12,30,0.5);
+  --transition: 320ms cubic-bezier(.2,.9,.2,1);
+  --nav-height: 56px;
 }
 
 /* ==================== BASE ==================== */
-*{box-sizing:border-box}
-html,body{
-	height:100%;
-	margin:0;
-	font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;
-	color:#e7f6ff;
-	background:linear-gradient(160deg,var(--bg-1) 0%, var(--bg-2) 60%);
-	-webkit-font-smoothing:antialiased; 
-	-moz-osx-font-smoothing:grayscale;
+* { box-sizing: border-box; margin:0; padding:0; }
+html, body {
+  height: 100%;
+  font-family: Inter, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #e7f6ff;
+  background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 60%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-/* ==================== BACKGROUND BLOBS (LIGEROS) ==================== */
-body::before, body::after{
-	content:""; 
-	position:fixed; pointer-events:none; z-index:0;
-	width:50vmax; height:50vmax; border-radius:50%;
-	filter: blur(40px); opacity:0.7;
+/* ==================== ANIMACIÓN DE FONDO ==================== */
+body::before, body::after {
+  content:""; position:fixed; pointer-events:none; z-index:0;
+  width: 50vmax; height: 50vmax; border-radius:50%; filter: blur(40px); opacity:0.7;
 }
-body::before{ left:-25vmax; top:-20vmax;
-	background: radial-gradient(circle at 30% 30%, rgba(124,58,237,0.16), transparent 25%), radial-gradient(circle at 70% 70%, rgba(6,182,212,0.09), transparent 25%);
-	animation: blobMove1 12s ease-in-out infinite alternate;
+body::before {
+  left:-25vmax; top:-20vmax;
+  background: radial-gradient(circle at 30% 30%, rgba(124,58,237,0.16), transparent 25%), radial-gradient(circle at 70% 70%, rgba(6,182,212,0.09), transparent 25%);
+  animation: blobMove1 12s ease-in-out infinite alternate;
 }
-body::after{ right:-25vmax; bottom:-20vmax;
-	background: radial-gradient(circle at 30% 30%, rgba(6,182,212,0.12), transparent 25%), radial-gradient(circle at 70% 70%, rgba(124,58,237,0.08), transparent 25%);
-	animation: blobMove2 14s ease-in-out infinite alternate;
+body::after {
+  right:-25vmax; bottom:-20vmax;
+  background: radial-gradient(circle at 30% 30%, rgba(6,182,212,0.12), transparent 25%), radial-gradient(circle at 70% 70%, rgba(124,58,237,0.08), transparent 25%);
+  animation: blobMove2 14s ease-in-out infinite alternate;
 }
-@keyframes blobMove1{ from{transform:translateY(0) rotate(0)} to{transform:translateY(4vh) rotate(6deg)} }
-@keyframes blobMove2{ from{transform:translateY(0) rotate(0)} to{transform:translateY(-4vh) rotate(-5deg)} }
+@keyframes blobMove1 { from{transform:translateY(0) rotate(0)} to{transform:translateY(4vh) rotate(6deg)} }
+@keyframes blobMove2 { from{transform:translateY(0) rotate(0)} to{transform:translateY(-4vh) rotate(-5deg)} }
 
 /* ==================== NAVBAR ==================== */
-nav{
-	position:fixed; top:0; left:0; right:0; height:var(--nav-height);
-	display:flex; align-items:center; justify-content:space-between; gap:12px;
-	padding:8px 20px; z-index:40;
-	background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-	backdrop-filter: blur(6px) saturate(110%);
-	box-shadow: 0 4px 12px rgba(2,6,20,0.4);
-	border-bottom: 1px solid rgba(255,255,255,0.02);
-}
-nav .brand{
-	font-weight:900;
-	font-size:1.12rem;
-	letter-spacing:0.6px;
-	display:inline-flex;
-	align-items:center;
-	gap:8px;
-}
-nav .brand::before{
-	content:""; width:8px; height:8px; border-radius:2px;
-	background: linear-gradient(135deg,var(--accent-1),var(--accent-2));
-	box-shadow: 0 4px 12px rgba(124,58,237,0.18);
-	transform: translateY(-1px);
-	display:inline-block;
-}
-nav .nav-left, nav .nav-right{display:flex;gap:10px;align-items:center}
-nav a, nav button{ color:#dff6ff; text-decoration:none; font-weight:700; background:transparent; border:0; cursor:pointer; }
-
-/* ==================== CONTAINERS ==================== */
-.container, .feed, .auth-container, .create-post-section{
-	max-width:1000px; margin:calc(var(--nav-height) + 28px) auto; padding:18px; position:relative; z-index:10;
-}
-.feed{ max-width:760px; margin-top:calc(var(--nav-height) + 36px); display:flex; justify-content:center; }
-.posts-column{ width:100%; display:flex; flex-direction:column; gap:18px; }
-
-/* ==================== CENTRAR CARDS Y CONTROLAR TAMAÑO ==================== */
-.auth-card, .post-card, .card {
-  max-width: 420px;   /* tamaño máximo deseado */
-  width: 90%;         /* responsive para pantallas chicas */
-  margin: 0 auto;     /* centrado horizontal */
-}
-
-.auth-form input, .auth-form textarea {
-  max-width: 100%;    /* no permitir que se agrande más del contenedor */
-  box-sizing: border-box; /* incluye padding y border en width */
-}
-
-.post-content img {
-  max-width: 100%;    /* que no sobrepase el contenedor */
-  height: auto;       /* mantener proporción */
-  border-radius: 12px;
-  display: block;     /* quitar inline que puede afectar layout */
-  margin: 0 auto;     /* centrar imagen */
-}
-
-/* Ajuste para contenedor general de posts */
-.posts-container {
-  max-width: 760px;
-  width: 95%;
-  margin: calc(var(--nav-height) + 36px) auto;
-}
-
-/* ==================== POST HEADER ==================== */
-.post-header{ display:flex; align-items:center; justify-content:space-between; gap:12px }
-.post-avatar{ width:44px; height:44px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:800; color:#021221; background:linear-gradient(90deg,var(--accent-1),var(--accent-2)); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-
-/* ==================== POST CONTENT ==================== */
-.post-content p{ margin:10px 0; color:#dff2ff; line-height:1.5; }
-.post-content img{ width:100%; border-radius:12px; max-height:420px; object-fit:cover; }
-
-/* ==================== ACTIONS ==================== */
-.post-actions{ display:flex; gap:10px; margin-top:12px; }
-.post-actions button{ background:transparent; border:1px solid rgba(255,255,255,0.03); color:var(--accent-1); padding:8px 12px; border-radius:999px; font-weight:800; cursor:pointer; transition:none; }
-.post-actions button:hover{ color:var(--accent-2); transform:none; }
-
-/* ==================== COMMENTS ==================== */
-.comments{ margin-top:12px; padding:12px; border-radius:12px; background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.02); color:var(--muted) }
-.comments ul{ margin:8px 0 12px; padding-left:16px }
-.comment-item{ background:rgba(255,255,255,0.05); border-radius:8px; padding:6px; margin:4px 0; }
-
-/* ==================== AUTH ==================== */
-.auth-container{
-	display:flex; align-items:center; justify-content:center;
-	min-height: calc(100vh - var(--nav-height));
-	padding: 20px; box-sizing:border-box;
-}
-.auth-card{
-	width: min(520px, 92vw);
-	border-radius: 16px;
-	padding: 22px;
-	background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-	border: 1px solid rgba(255,255,255,0.035);
-	box-shadow: 0 20px 60px rgba(2,6,23,0.45);
-	overflow: visible;
-}
-.auth-form{ display:flex; flex-direction:column; gap:12px; }
-.auth-form input, .auth-form textarea{
-	padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); background: rgba(10,14,20,0.6); color:#e8f7ff; outline:none;
-}
-.auth-form input:focus, .auth-form textarea:focus{ box-shadow: 0 6px 18px rgba(6,182,212,0.06); }
-
-/* ==================== BUTTONS ==================== */
-.btn, .primary {
-	min-height:44px; padding:12px 16px; border-radius:12px; font-weight:800; cursor:pointer; overflow:hidden; position:relative;
-	transition: box-shadow 260ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease;
-}
-.btn:hover, .btn:focus-visible { box-shadow: 0 12px 36px rgba(2,6,23,0.45); transform:none; }
-
-/* ==================== POPUP 3 PUNTOS ==================== */
-.post-controls{ position:relative; display:inline-block; }
-.more-btn{ background:#0d1117; border:none; font-size:1.5rem; cursor:pointer; color:#fff; padding:4px 8px; border-radius:6px; transition:background 0.2s; }
-.more-btn:hover{ background:#161b22; }
-.popup-options{
-	display:none; position:absolute; top:2rem; right:0; background:linear-gradient(145deg, #1c1f29, #2a2d3a);
-	border-radius:12px; box-shadow:0 6px 16px rgba(0,0,0,0.45); flex-direction:column; overflow:hidden;
-	opacity:0; transform:translateY(-6px) scale(0.95); transition:all 0.2s ease;
-}
-.popup-options.active{ display:flex; opacity:1; transform:translateY(0) scale(1); }
-.popup-options button{ padding:10px 16px; background:none; border:none; color:#fff; text-align:left; width:100%; font-weight:500; transition: background 0.2s; }
-.popup-options button:hover{ background:#3a3f55; color:#ffd966; }
-
-/* ==================== MODAL ==================== */
-.modal-overlay{ position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center; opacity:0; pointer-events:none; transition:opacity 0.25s ease; z-index:100; }
-.modal-overlay.active{ opacity:1; pointer-events:auto; }
-.modal{ background:linear-gradient(145deg,#1c1f29,#2a2d3a); color:#fff; padding:20px; border-radius:16px; min-width:320px; max-width:420px; opacity:0; transform: translateY(-10px) scale(0.97); transition: all 0.25s ease; box-shadow:0 8px 24px rgba(0,0,0,0.5);}
-.modal-overlay.active .modal{ opacity:1; transform:translateY(0) scale(1); }
-
-/* ==================== RESPONSIVE ==================== */
-@media (max-width:720px){
-	.container{ padding:12px; }
-	.auth-card{ margin:40px 12px; }
-	.nav-left a{ font-size:0.95rem; }
-}
-@media (min-width:900px){ .post-list{ grid-template-columns: repeat(2,1fr); } }
-
-/* ==================== POST ENTRANCE ANIMATION SUAVE ==================== */
-.post-card{ animation: fadeIn 0.4s ease; }
-@keyframes fadeIn { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
-
-/* BOTÓN CREAR POST FIJO */
-.create-btn {
+nav {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: var(--accent-1);
-  color: #fff;
-  padding: 14px 20px;
-  border-radius: 50px;
-  font-weight: 700;
-  font-size: 1.1rem;
-  text-decoration: none;
+  top:0; left:0; right:0;
+  height: var(--nav-height);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  backdrop-filter: blur(6px) saturate(110%);
+  box-shadow: 0 4px 12px rgba(2,6,20,0.4);
   z-index: 50;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.create-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+nav .nav-left a {
+  font-weight: 900; font-size: 1.2rem;
+  color: #dff6ff; text-decoration:none;
+  position: relative;
 }
+nav .nav-left a::after {
+  content: ''; position: absolute; bottom: -4px; left:0; width: 100%; height: 3px;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  transform: scaleX(0); transform-origin: left; transition: transform 0.4s ease;
+}
+nav .nav-left a:hover::after { transform: scaleX(1); }
 
-/* CONTENEDOR DE POSTS CENTRADO */
-.posts-container {
-  max-width: 760px;
-  margin: calc(var(--nav-height) + 36px) auto;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+/* ==================== CONTENEDOR PRINCIPAL ==================== */
+.main-section {
+  margin-top: calc(var(--nav-height) + 16px);
   padding: 0 12px;
 }
-.center-empty {
-  text-align: center;
-  font-size: 1.1rem;
-  padding: 20px;
+
+/* ==================== POSTS ==================== */
+.posts-container {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 100px;
+}
+.post-card {
+  background: linear-gradient(145deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius: var(--card-radius);
+  padding: 14px;
+  box-shadow: var(--soft-shadow);
+  border: 1px solid rgba(255,255,255,0.03);
+  opacity:0; transform: translateY(20px);
+  animation: postEntrance 0.5s forwards;
+}
+.post-card:nth-child(1){ animation-delay: 0.1s; }
+.post-card:nth-child(2){ animation-delay: 0.2s; }
+.post-card:nth-child(3){ animation-delay: 0.3s; }
+@keyframes postEntrance {
+  to { opacity:1; transform: translateY(0); }
+}
+.post-header { display:flex; justify-content: space-between; align-items:center; gap:12px; }
+.post-avatar {
+  width:44px; height:44px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:800; color:#021221;
+  background:linear-gradient(90deg,var(--accent-1),var(--accent-2));
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+  cursor:pointer;
+}
+.post-content h3 { margin-bottom:6px; color:#e8f7ff; }
+.post-content p { margin:0; line-height:1.5; color:#dff2ff; }
+.post-content img {
+  max-width: 100%; border-radius: 12px; display:block; margin: 10px auto; object-fit: cover;
+}
+.post-actions { display:flex; gap:10px; margin-top:10px; }
+.post-actions button {
+  background:transparent; border:1px solid rgba(255,255,255,0.03);
+  color: var(--accent-1); padding: 6px 12px; border-radius:999px;
+  font-weight:700; cursor:pointer; transition: all 0.2s;
+}
+.post-actions button:hover { color: var(--accent-2); }
+
+/* ==================== BOTÓN CREAR PUBLICACIÓN ==================== */
+.create-btn {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--accent-1);
+  color: #fff; font-weight:700; font-size:1.1rem;
+  padding:14px 20px; border-radius:50px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.25);
+  z-index: 60;
+  transition: all 0.3s ease;
+  animation: pulse 2s infinite;
+}
+.create-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow:0 12px 24px rgba(0,0,0,0.35);
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* ==================== POPUPS ==================== */
+.popup-options {
+  display: none; position: absolute; top:2rem; right:0;
+  background: linear-gradient(145deg,#1c1f29,#2a2d3a);
+  border-radius: 12px; box-shadow: 0 6px 16px rgba(0,0,0,0.45);
+  flex-direction: column; overflow:hidden;
+  opacity:0; transform: translateY(-6px) scale(0.95); transition: all 0.2s ease;
+  z-index:70;
+}
+.popup-options.active { display:flex; opacity:1; transform: translateY(0) scale(1); }
+.popup-options button { padding:10px 16px; background:none; border:none; color:#fff; text-align:left; width:100%; font-weight:500; transition: background 0.2s; }
+.popup-options button:hover { background:#3a3f55; color:#ffd966; }
+
+/* ==================== MODAL ==================== */
+.modal-overlay {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background: rgba(0,0,0,0.6);
+  display:flex; justify-content:center; align-items:center;
+  opacity:0; pointer-events:none;
+  transition: opacity 0.25s ease;
+  z-index:100;
+}
+.modal-overlay.active { opacity:1; pointer-events:auto; }
+.modal {
+  background: linear-gradient(145deg,#1c1f29,#2a2d3a);
+  color:#fff; padding:20px; border-radius:16px;
+  min-width:320px; max-width:420px;
+  opacity:0; transform: translateY(-10px) scale(0.97);
+  transition: all 0.25s ease; box-shadow:0 8px 24px rgba(0,0,0,0.5);
+}
+.modal-overlay.active .modal { opacity:1; transform: translateY(0) scale(1); }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width:720px) {
+  .posts-container { width: 95%; }
+  nav .nav-left a { font-size: 1rem; }
+  .create-btn { padding: 12px 18px; font-size:1rem; }
+}
+
+/* ==================== BOTÓN INICIAR SESIÓN ==================== */
+nav .nav-right a {
+  position: relative;
+  color: #dff6ff;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 4px 0;
+  transition: color 0.3s ease;
+}
+
+nav .nav-right a::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+nav .nav-right a:hover {
+  color: #fff;
+}
+
+nav .nav-right a:hover::after {
+  transform: scaleX(1);
+}
+
+/* ==================== BOTÓN DE CERRAR SESIÓN ==================== */
+nav .nav-right button {
+  background: var(--accent-2);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  margin-left: 8px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+nav .nav-right button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.35);
+}
+
+/* ============================
+   MODAL POPUPS (Editar/Eliminar)
+=============================== */
+
+/* Overlay general */
+.modal-overlay {
+  position: fixed;
+  top:0; left:0; width:100%; height:100%;
+  background: rgba(7,12,30,0.85);
+  display:flex; justify-content:center; align-items:center;
+  opacity:0; pointer-events:none;
+  transition: opacity var(--transition);
+  z-index:999;
+}
+.modal-overlay.active { opacity:1; pointer-events:auto; }
+
+/* Contenedor del modal */
+.modal {
+  background: linear-gradient(145deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  color: #e7f6ff;
+  padding: 20px 25px;
+  border-radius: var(--card-radius);
+  width:90%; max-width:400px;
+  box-shadow: var(--elev-shadow);
+  border:1px solid var(--accent-2);
+  opacity:0; transform: translateY(-10px) scale(0.97);
+  transition: all var(--transition);
+}
+.modal-overlay.active .modal {
+  opacity:1; transform: translateY(0) scale(1);
+}
+
+/* Títulos y párrafos */
+.modal h3 {
+  margin:0 0 15px;
+  font-size:1.3rem;
+  color: var(--accent-2);
+}
+.modal p {
+  margin-bottom:15px;
+  line-height:1.4;
+  color: var(--muted);
+}
+
+/* Inputs y textarea */
+.modal input[type="text"], .modal textarea {
+  width:100%; padding:10px 12px; margin-bottom:15px;
+  border:1px solid #333; border-radius: var(--card-radius);
+  background: #081430; color:#e7f6ff;
+  font-size:0.95rem; resize:vertical;
+  transition: box-shadow var(--transition);
+}
+.modal input[type="text"]:focus, .modal textarea:focus {
+  outline:none;
+  box-shadow: 0 0 10px var(--accent-2);
+}
+
+/* Botones */
+.modal button {
+  padding:10px 18px; border:none; border-radius: var(--card-radius);
+  cursor:pointer; font-weight:bold; font-size:0.95rem; margin-right:10px;
+  transition: all var(--transition);
+}
+
+/* Confirmar */
+.modal button.confirm {
+  background: var(--accent-2); color:#fff;
+}
+.modal button.confirm:hover {
+  background: var(--accent-1);
+  transform: scale(1.05);
+}
+
+/* Cancelar */
+.modal button.cancel {
+  background:#12181f; color:#e7f6ff;
+}
+.modal button.cancel:hover {
+  background:#1c2233; transform: scale(1.05);
+}
+
+/* ============================
+   BOTÓN 3 PUNTOS + POPUP OPCIONES
+=============================== */
+
+/* Botón ⋯ */
+.more-btn {
+  background: transparent;
+  border: none;
+  font-size:1.2rem;
+  cursor:pointer;
+  position: relative;
+  transition: transform var(--transition), color var(--transition);
+  color: #e7f6ff;
+}
+.more-btn:hover {
+  transform: scale(1.2);
+  color: var(--accent-1);
+}
+
+/* Pulsación */
+.more-btn::after {
+  content:'';
+  position:absolute; top:50%; left:50%;
+  width:0; height:0;
+  background: rgba(124,58,237,0.2);
+  border-radius:50%;
+  transform: translate(-50%,-50%);
+  transition: width 0.3s ease, height 0.3s ease;
+  z-index:-1;
+}
+.more-btn:hover::after {
+  width:40px; height:40px;
+}
+
+/* Popup de opciones */
+.popup-options {
+  position:absolute; top:2.5rem; right:0;
+  background: linear-gradient(145deg,#081430,#0a1022);
+  border-radius: var(--card-radius);
+  box-shadow: var(--soft-shadow);
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  opacity:0; transform: translateY(-8px) scale(0.95);
+  pointer-events:none; transition: all var(--transition);
+  z-index:70; min-width:120px;
+}
+.popup-options.active {
+  opacity:1; transform: translateY(0) scale(1);
+  pointer-events:auto;
+}
+
+/* Botones dentro del popup */
+.popup-options button {
+  width:100%; padding:10px 16px;
+  background:transparent; border:none; text-align:left;
+  color:#e7f6ff; font-weight:500; transition: background var(--transition);
+}
+.popup-options button:hover {
+  background: var(--accent-2);
+  color:#fff;
+}
+
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 15px;
+  background: #111827; /* fondo del modal transparente oscuro */
+  border-radius: 12px;
+  color: #e8f7ff;
+  width: 250px;
+}
+
+.profile-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); /* igual que posts */
+  color: #021221;
+}
+
+.profile-avatar-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #ff4d4d, #ff914d);
+  color: #021221;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+
+.comment-text {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.comment-avatar, .comment-avatar-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #3b3f50;
+  color: #fff;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.comment-body {
+  background: #1c2130;
+  padding: 6px 10px;
+  border-radius: 12px;
+  max-width: 80%;
+}
+
+.comment-username {
+  font-weight: bold;
+  margin-bottom: 2px;
+  color: #e8f7ff;
+}
+
+.comment-content {
+  color: #e8f7ff;
+  word-break: break-word;
 }

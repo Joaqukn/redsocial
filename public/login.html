@@ -2,33 +2,37 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Iniciar sesión - RedSocial</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar sesión - Souls Social</title>
   <link rel="stylesheet" href="login.css" />
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-  <nav>
-    <div class="nav-left"><a href="index.html" class="brand">🔷Souls Social</a></div>
-    <div class="nav-right" id="navRight"></div>
+
+  <!-- Navbar -->
+  <nav id="navbar">
+    <div class="nav-left"><a href="index.html" class="brand">SoulsSocial</a></div>
+    <div class="nav-right" id="navRight"></div> 
   </nav>
 
+  <!-- Fondo animado -->
+  <div class="background-fantasy"></div>
+
+  <!-- Contenedor login -->
   <main class="auth-container">
     <div class="auth-card">
       <h2>Iniciar sesión</h2>
 
       <form id="loginForm" class="auth-form">
-        <div class="input-with-icon">
-          <i data-lucide="mail"></i>
-          <input name="email" class="auth-input" type="email" placeholder="Correo electrónico" required />
+        <div class="input-wrapper">
+          <span class="input-icon"><i data-lucide="mail"></i></span>
+          <input id="emailInput" name="email" type="email" placeholder="Correo electrónico" required />
         </div>
 
-        <div class="password-wrapper" style="width:100%;">
-          <div class="input-with-icon" style="padding-right:92px;">
-            <i data-lucide="lock"></i>
-            <input id="passwordInput" name="password" class="auth-input" type="password" placeholder="Contraseña" required />
-          </div>
-          <button type="button" class="password-toggle" aria-label="Mostrar contraseña" data-target="passwordInput">
+        <div class="input-wrapper password-wrapper">
+          <span class="input-icon"><i data-lucide="lock"></i></span>
+          <input id="passwordInput" name="password" type="password" placeholder="Contraseña" required />
+          <button type="button" class="password-toggle" data-target="passwordInput">
             <i data-lucide="eye"></i>
           </button>
         </div>
@@ -36,76 +40,102 @@
         <button type="submit" class="btn">Entrar</button>
       </form>
 
-      <div style="margin-top:12px;color:var(--muted);font-size:0.95rem;">
-        ¿No tienes cuenta? <a href="register.html" style="color:var(--accent-2)">Regístrate</a>
+      <div class="auth-footer">
+        ¿No tienes cuenta? <a href="register.html">Regístrate</a>
       </div>
     </div>
   </main>
 
-  <script>
-    // Renderiza iconos
-    lucide.createIcons();
+  <!-- Popup de error -->
+  <div id="popup-overlay" class="popup-overlay hidden">
+    <div id="popup" class="popup">
+      <div id="popup-icon" class="popup-icon">401</div>
+      <h2 id="popup-title">Un espelunante error ocurrio</h2>
+      <p id="popup-description">Lo sentimos, la página que buscas no existe.</p>
+    </div>
+  </div>
 
-    // navRight: muestra usuario o link
-    (function renderNav(){
-      const navRight = document.getElementById('navRight');
-      const username = localStorage.getItem('username');
-      navRight.innerHTML = username
-        ? `<span>👤 ${username}</span><button id="logoutBtn">Cerrar sesión</button>`
-        : `<a href="login.html">Iniciar sesión</a>`;
-      const logoutBtn = document.getElementById('logoutBtn');
-      if (logoutBtn) logoutBtn.addEventListener('click', ()=>{ localStorage.clear(); location.href='login.html'; });
-    })();
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  lucide.createIcons();
 
-    // password toggle (robusto, actualiza data-lucide)
-    document.querySelectorAll('.password-toggle').forEach(btn=>{
-      btn.addEventListener('click', (e)=>{
-        e.preventDefault();
-        const targetId = btn.getAttribute('data-target');
-        const input = document.getElementById(targetId);
-        if (!input) return;
-        const showing = input.type === 'text';
-        input.type = showing ? 'password' : 'text';
-        const icon = btn.querySelector('i');
-        if (icon) {
-          icon.setAttribute('data-lucide', showing ? 'eye' : 'eye-off');
-          lucide.createIcons();
-        }
-        try { input.focus(); input.setSelectionRange(input.value.length, input.value.length); } catch {}
-        btn.setAttribute('aria-label', showing ? 'Mostrar contraseña' : 'Ocultar contraseña');
+  // Navbar dinámica
+  const navRight = document.getElementById('navRight');
+  const username = localStorage.getItem('username');
+  navRight.innerHTML = username
+    ? `<span>👤 ${username}</span><button id="logoutBtn">Cerrar sesión</button>`
+    : `<a href="login.html">Iniciar sesión</a>`;
+  const logoutBtn = document.getElementById('logoutBtn');
+  if(logoutBtn){
+    logoutBtn.addEventListener('click', ()=>{
+      localStorage.clear();
+      location.href='login.html';
+    });
+  }
+
+  // Toggle mostrar/ocultar contraseña
+  document.querySelectorAll('.password-toggle').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const input = document.getElementById(btn.dataset.target);
+      if(!input) return;
+      if(input.type==='password'){ input.type='text'; btn.querySelector('i').setAttribute('data-lucide','eye-off'); }
+      else { input.type='password'; btn.querySelector('i').setAttribute('data-lucide','eye'); }
+      lucide.createIcons();
+    });
+  });
+
+  // Login submit
+  const loginForm = document.getElementById('loginForm');
+  loginForm.addEventListener('submit', async e=>{
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled=true;
+    btn.textContent='Cargando...';
+    try {
+      const data = Object.fromEntries(new FormData(loginForm).entries());
+      const res = await fetch('/api/users/login',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(data)
       });
-    });
-
-    // submit handler con feedback
-    document.getElementById('loginForm').addEventListener('submit', async e=>{
-      e.preventDefault();
-      const btn = e.target.querySelector('button[type="submit"]');
-      btn.disabled = true;
-      btn.classList.add('loading');
-      try {
-        const data = Object.fromEntries(new FormData(e.target).entries());
-        const res = await fetch('/api/users/login', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify(data)
-        });
-        if (res.ok) {
-          const r = await res.json();
-          localStorage.setItem('username', r.username);
-          // small success animation then redirect
-          btn.textContent = '¡Bienvenido!';
-          setTimeout(()=> location.href='index.html', 420);
-        } else {
-          const err = await res.json().catch(()=>({message:'Error'}));
-          alert(err.message || 'Error al iniciar sesión');
-        }
-      } catch {
-        alert('Error de red. Intenta de nuevo.');
-      } finally {
-        btn.disabled = false;
-        btn.classList.remove('loading');
+      if(res.ok){
+        const r = await res.json();
+        localStorage.setItem('username', r.username);
+        localStorage.setItem('email', data.email);
+        btn.textContent='¡Bienvenido!';
+        setTimeout(()=>location.href='index.html',400);
+      } else {
+        const err = await res.json().catch(()=>({message:'Error'}));
+        showPopup(err.message || 'Error al iniciar sesión');
       }
+    } catch {
+      showPopup('Error de red. Intenta de nuevo.');
+    } finally {
+      btn.disabled=false;
+      btn.textContent='Entrar';
+    }
+  });
+
+  function showPopup(msg){
+    const overlay = document.getElementById('popup-overlay');
+    overlay.querySelector('p').textContent=msg;
+    overlay.classList.remove('hidden');
+    setTimeout(()=>overlay.classList.add('hidden'),2500);
+  }
+
+  // Animar letras de la navbar
+  const brand = document.querySelector('nav .brand');
+  if (brand){
+    const text = brand.textContent;
+    brand.textContent='';
+    text.split('').forEach(char=>{
+      const span=document.createElement('span');
+      span.textContent=char;
+      brand.appendChild(span);
     });
-  </script>
+  }
+
+});
+</script>
 </body>
 </html>

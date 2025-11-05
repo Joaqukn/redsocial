@@ -1,6 +1,13 @@
+/* Box-sizing global */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root{
-  --bg-1: #071022;
-  --bg-2: #081430;
+  --bg-1: #0b1120;
+  --bg-2: #101a35;
   --accent-1: #06b6d4;
   --accent-2: #7c3aed;
   --muted: #98a3b3;
@@ -17,7 +24,26 @@ body {
   display:flex;
   flex-direction:column;
   align-items:center;
+  justify-content:center;
   min-height:100vh;
+  overflow:hidden;
+  text-align:center;
+}
+
+/* Fondo animado */
+.background-fantasy {
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: linear-gradient(270deg, #0b1120, #101a35, #121f44, #081430);
+  background-size: 800% 800%;
+  animation: gradientMove 30s ease infinite;
+  z-index:-1;
+}
+@keyframes gradientMove {
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
 }
 
 /* Navbar */
@@ -30,108 +56,233 @@ nav {
   align-items:center;
   padding:0 24px;
   box-shadow:0 4px 12px rgba(0,0,0,0.4);
+  position:fixed;
+  top:0; left:0;
+  z-index:10;
+  transform: none;  /* quitar translateY(-100%) */
+  opacity: 1;       /* siempre visible */
+  transition: opacity 0.5s ease;
+  animation: navSlideDown 800ms cubic-bezier(.2,.9,.2,1) forwards;
 }
-nav a { color:#e8f7ff; text-decoration:none; font-weight:600; }
-nav a:hover { color:var(--accent-1); }
+@keyframes navSlideDown {
+  0% { transform: translateY(-100%); opacity:0; }
+  70% { transform: translateY(10px); opacity:1; }
+  100% { transform: translateY(0); }
+}
+nav a {
+  color:#e8f7ff;
+  text-decoration:none;
+  font-weight:600;
+  transition: color 0.3s ease;
+}
+nav a:hover { color: var(--accent-1); }
 
-/* Contenedor */
+/* Contenedor login */
 .auth-container {
   display:flex;
   align-items:center;
   justify-content:center;
-  min-height:calc(100vh - 56px);
   width:100%;
-  padding:20px;
-  box-sizing:border-box;
+  padding:24px;
+  margin-top:80px;
+  flex-direction:column;
 }
 
 /* Tarjeta login */
 .auth-card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  padding:22px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.05));
+  padding:50px 36px;
   border-radius: var(--card-radius);
-  box-shadow:0 24px 80px rgba(2,6,23,0.55);
-  width:min(520px, 92vw);
-  margin:0 auto;
+  box-shadow:0 24px 80px rgba(2,6,23,0.65);
+  width:min(420px, 90vw);
   text-align:center;
-  animation: authAppear 420ms var(--transition) both;
+  animation: cardAppear 500ms ease forwards;
 }
-@keyframes authAppear {
-  from {opacity:0; transform:translateY(18px) scale(0.99);}
-  to {opacity:1; transform:translateY(0) scale(1);}
+@keyframes cardAppear {
+  from {opacity:0; transform:translateY(20px);}
+  to {opacity:1; transform:translateY(0);}
+}
+.auth-card h2 {
+  margin-bottom:24px;
+  font-size:1.8rem;
+  color:#fff;
 }
 
 /* Inputs */
-.auth-form .auth-input {
-  width:100%;
-  padding:12px;
-  border-radius:12px;
-  margin-bottom:12px;
-  background: rgba(20,26,33,0.85);
-  border:1px solid rgba(255,255,255,0.08);
-  color:#e8f7ff;
-  outline:none;
-  font-size:0.95rem;
-  opacity:0;
-  transform:translateY(8px);
-  animation: inputIn 420ms ease forwards;
+.input-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom:20px;
 }
-.auth-form .auth-input:nth-child(1){ animation-delay:0.04s; }
-.auth-form .auth-input:nth-child(2){ animation-delay:0.08s; }
-@keyframes inputIn { to{opacity:1; transform:none;} }
-.auth-input:focus{
-  box-shadow:0 14px 40px rgba(4,180,200,0.06);
-  border-color: rgba(4,180,200,0.15);
+.input-wrapper .input-icon {
+  position: absolute;
+  top:50%;
+  left:12px;
+  transform: translateY(-50%);
+  color: var(--accent-1);
+}
+.input-wrapper input {
+  width: 100%;
+  padding: 12px 12px 12px 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(20,26,33,0.9);
+  color: #fff;
+  font-size: 1rem;
+  outline: none;
+  transition: 0.3s;
+  display: block;
 }
 
-/* Toggle de contraseña */
-.password-toggle {
+/* Ojo */
+.password-wrapper .password-toggle {
   position:absolute;
   right:12px;
   top:50%;
-  transform:translateY(-50%);
-  cursor:pointer;
-  color:var(--muted);
-  transition: color 0.2s ease, transform 0.2s ease;
-  user-select:none;
-}
-.password-toggle:hover { color: var(--accent-1); transform: scale(1.05); }
-.password-toggle:active { transform: scale(0.98); }
-
-/* Botón */
-.btn {
-  margin-top:8px;
-  padding:12px 18px;
-  border-radius:12px;
-  font-weight:800;
-  cursor:pointer;
-  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
-  color:#fff;
+  transform: translateY(-50%);
+  background:none;
   border:none;
-  position:relative;
-  overflow:hidden;
-  transition: transform 280ms cubic-bezier(.22,.95,.2,1), box-shadow 280ms cubic-bezier(.22,.95,.2,1);
-}
-.btn::after{
-  content:"";
-  position:absolute;
-  left:-60%;
-  top:0;
-  width:60%;
-  height:100%;
-  background: linear-gradient(120deg, rgba(255,255,255,0.06), rgba(255,255,255,0.14), rgba(255,255,255,0.06));
-  transform: skewX(-18deg);
-  opacity:0;
-  pointer-events:none;
-  transition:left 420ms cubic-bezier(.2,.9,.2,1), opacity 260ms ease;
-}
-.btn:hover::after { left:100%; opacity:1; }
-.btn:hover, .btn:focus-visible { transform: translateY(-2px) scale(1.01); box-shadow:0 28px 80px rgba(2,6,23,0.55); }
-.btn:active { transform: scale(.997); }
-
-/* Responsive */
-@media (max-width:520px){
-  .auth-card{ padding:16px; width:calc(100%-28px);}
-  .auth-container{ padding:14px;}
+  cursor:pointer;
+  color: var(--muted);
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
+/* Botón de login sin glow */
+.btn {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  padding: 14px 0;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  color: #fff;
+  border: none;
+  font-size: 1rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn::after {
+  content: "";
+  position: absolute;
+  left: -120%;          /* empieza más a la izquierda */
+  top: 0;
+  width: 120%;          /* más ancho para 2 líneas de luz */
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    rgba(255,255,255,0.1) 0%,
+    rgba(255,255,255,0.25) 50%,
+    rgba(255,255,255,0.1) 100%
+  );
+  transform: skewX(-20deg);
+  opacity: 0;
+  pointer-events: none;
+  transition: left 1.2s cubic-bezier(.2,.9,.2,1), opacity 300ms ease;
+}
+
+.btn:hover::after {
+  left: 120%;   /* recorre todo el botón */
+  opacity: 1;
+}
+
+.btn:hover, .btn:focus-visible {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 28px 100px rgba(2,6,23,0.6);
+}
+
+.btn:active {
+  transform: translateY(-2px) scale(0.995);
+}
+
+
+
+/* Footer */
+.auth-footer {
+  margin-top:16px;
+  font-size:0.9rem;
+  color: var(--muted);
+}
+.auth-footer a {
+  color: var(--accent-1);
+  text-decoration:none;
+  font-weight:500;
+}
+.auth-footer a:hover { text-decoration:underline; }
+
+/* Popup */
+.popup-overlay {
+  position: fixed;
+  top:0; left:0;
+  width:100vw; height:100vh;
+  background: rgba(7,16,34,0.9);
+  display:flex; align-items:center; justify-content:center;
+  backdrop-filter: blur(6px);
+  z-index:9999;
+  transition: opacity 0.3s ease;
+}
+.popup-overlay.hidden { display:none; }
+
+.popup {
+  background: linear-gradient(180deg, #101a35, #0b1120);
+  border-radius:20px;
+  padding:2rem;
+  text-align:center;
+  max-width:320px;
+  width:90%;
+  color:#e8f7ff;
+  box-shadow:0 0 30px rgba(124,58,237,0.5);
+  animation: popup-fadein 0.4s ease;
+}
+@keyframes popup-fadein {
+  from {opacity:0; transform:translateY(-40px) scale(0.95);}
+  to {opacity:1; transform:translateY(0) scale(1);}
+}
+
+.popup-icon { 
+  font-size:3rem; 
+  margin-bottom:0.5rem; 
+  font-weight:bold;
+  color: var(--accent-2);
+  animation: pulse 2s infinite; 
+}
+@keyframes pulse { 
+  0%,100%{transform:scale(1)} 
+  50%{transform:scale(1.1)} 
+}
+
+.popup h2 {
+  margin: 0.5rem 0;
+  font-size:1.5rem;
+  color: var(--accent-1);
+}
+.popup p {
+  font-size:1rem;
+  color:#98a3b3;
+}
+
+
+/* Efecto línea animada debajo del texto de la navbar */
+nav .brand {
+  position: relative;
+  display: inline-block;
+}
+
+nav .brand::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -4px; /* separación debajo del texto */
+  width: 0%;
+  height: 2px; /* grosor de la línea */
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  transition: width 0.5s ease;
+}
+
+nav .brand:hover::after {
+  width: 100%; /* la línea se expande al pasar el mouse */
+}

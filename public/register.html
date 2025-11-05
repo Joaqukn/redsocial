@@ -2,30 +2,42 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Registrarse - RedSocial</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="register.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registrarse - Souls Social</title>
+  <link rel="stylesheet" href="login.css" /> <!-- CSS compartido login/registro -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-  <nav>
-    <div class="nav-left"><a href="index.html" class="brand">🔷 Souls Social</a></div>
-    <div class="nav-right" id="navRight"></div>
+
+  <!-- Navbar -->
+  <nav id="navbar">
+    <div class="nav-left"><a href="index.html" class="brand">SoulsSocial</a></div>
+    <div class="nav-right" id="navRight"></div> 
   </nav>
 
+  <!-- Fondo animado -->
+  <div class="background-fantasy"></div>
+
+  <!-- Contenedor registro -->
   <main class="auth-container">
     <div class="auth-card">
       <h2>Crear cuenta</h2>
 
       <form id="registerForm" class="auth-form">
-        <input name="username" class="auth-input" type="text" placeholder="Nombre de usuario" required />
-        <input name="email" class="auth-input" type="email" placeholder="Correo electrónico" required />
-        <div class="password-wrapper" style="width:100%;">
-          <div class="input-with-icon" style="padding-right:92px;">
-            <i data-lucide="lock"></i>
-            <input id="regPassword" name="password" class="auth-input" type="password" placeholder="Contraseña" required />
-          </div>
-          <button type="button" class="password-toggle" aria-label="Mostrar contraseña" data-target="regPassword">
+        <div class="input-wrapper">
+          <span class="input-icon"><i data-lucide="user"></i></span>
+          <input name="username" type="text" placeholder="Nombre de usuario" required />
+        </div>
+
+        <div class="input-wrapper">
+          <span class="input-icon"><i data-lucide="mail"></i></span>
+          <input name="email" type="email" placeholder="Correo electrónico" required />
+        </div>
+
+        <div class="input-wrapper password-wrapper">
+          <span class="input-icon"><i data-lucide="lock"></i></span>
+          <input id="regPassword" name="password" type="password" placeholder="Contraseña" required />
+          <button type="button" class="password-toggle" data-target="regPassword">
             <i data-lucide="eye"></i>
           </button>
         </div>
@@ -33,17 +45,25 @@
         <button type="submit" class="btn">Registrarse</button>
       </form>
 
-      <div style="margin-top:12px;color:var(--muted);font-size:0.95rem;">
-        ¿Ya tienes cuenta? <a href="login.html" style="color:var(--accent-2)">Inicia sesión</a>
+      <div class="auth-footer">
+        ¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a>
       </div>
     </div>
   </main>
 
-  <script>
+  <!-- Popup de error -->
+  <div id="popup-overlay" class="popup-overlay hidden">
+    <div id="popup" class="popup">
+      <div id="popup-icon" class="popup-icon">401</div>
+      <h2 id="popup-title">Un espelunante error ocurrio</h2>
+      <p id="popup-description">Aquí irá la descripción del error.</p>
+    </div>
+  </div>
 
+  <script>
     lucide.createIcons();
 
-    // render navRight
+    // Navbar dinámica
     (function(){
       const navRight = document.getElementById('navRight');
       const username = localStorage.getItem('username');
@@ -51,57 +71,75 @@
         ? `<span>👤 ${username}</span><button id="logoutBtn">Cerrar sesión</button>`
         : `<a href="login.html">Iniciar sesión</a>`;
       const logoutBtn = document.getElementById('logoutBtn');
-      if (logoutBtn) logoutBtn.addEventListener('click', ()=>{ localStorage.clear(); location.href='login.html'; });
+      if(logoutBtn) logoutBtn.addEventListener('click', ()=>{ localStorage.clear(); location.href='login.html'; });
     })();
 
-    // password toggle (same as login)
+    // Toggle mostrar/ocultar contraseña
     document.querySelectorAll('.password-toggle').forEach(btn=>{
-      btn.addEventListener('click', ev=>{
-        ev.preventDefault();
-        const targetId = btn.getAttribute('data-target');
-        const input = document.getElementById(targetId);
-        if (!input) return;
+      btn.addEventListener('click', e=>{
+        e.preventDefault();
+        const input = document.getElementById(btn.dataset.target);
+        if(!input) return;
         const showing = input.type === 'text';
         input.type = showing ? 'password' : 'text';
-        const icon = btn.querySelector('i');
-        if (icon) {
-          icon.setAttribute('data-lucide', showing ? 'eye' : 'eye-off');
-          lucide.createIcons();
-        }
-        try { input.focus(); input.setSelectionRange(input.value.length, input.value.length); } catch {}
-        btn.setAttribute('aria-label', showing ? 'Mostrar contraseña' : 'Ocultar contraseña');
+        btn.querySelector('i').setAttribute('data-lucide', showing ? 'eye' : 'eye-off');
+        lucide.createIcons();
       });
     });
 
-    // register submit with animation + feedback
-    document.getElementById('registerForm').addEventListener('submit', async e=>{
+    // Popup de error
+    function showPopup(msg){
+      const overlay = document.getElementById('popup-overlay');
+      overlay.querySelector('p').textContent = msg;
+      overlay.classList.remove('hidden');
+      setTimeout(()=> overlay.classList.add('hidden'), 2500);
+    }
+
+    // Submit del registro (AJAX)
+    const registerForm = document.getElementById('registerForm');
+    registerForm.addEventListener('submit', async e=>{
       e.preventDefault();
       const btn = e.target.querySelector('button[type="submit"]');
       btn.disabled = true;
-      btn.classList.add('loading');
+      btn.textContent = 'Cargando...';
       try {
-        const data = Object.fromEntries(new FormData(e.target).entries());
-        const res = await fetch('/api/users/register', {
+        const data = Object.fromEntries(new FormData(registerForm).entries());
+        const res = await fetch('/api/users/register',{
           method:'POST',
           headers:{ 'Content-Type':'application/json' },
           body: JSON.stringify(data)
         });
-        if (res.ok) {
+        if(res.ok){
           const r = await res.json();
           localStorage.setItem('username', r.username);
+          localStorage.setItem('email', data.email);
           btn.textContent = '¡Creado!';
-          setTimeout(()=> location.href='index.html', 420);
+          setTimeout(()=> location.href='index.html',400);
         } else {
           const err = await res.json().catch(()=>({message:'Error'}));
-          alert(err.message || 'Error al registrarse');
+          showPopup(err.message || 'Error al registrarse');
         }
       } catch {
-        alert('Error de red. Intenta de nuevo.');
+        showPopup('Error de red. Intenta de nuevo.');
       } finally {
-        btn.disabled = false;
-        btn.classList.remove('loading');
+        btn.disabled=false;
+        btn.textContent='Registrarse';
       }
     });
+
+    // Animar letras de la navbar
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const brand = document.querySelector('nav .brand');
+      if (!brand) return;
+      const text = brand.textContent;
+      brand.textContent = '';
+      text.split('').forEach(char=>{
+        const span = document.createElement('span');
+        span.textContent = char;
+        brand.appendChild(span);
+      });
+    });
   </script>
+
 </body>
 </html>
