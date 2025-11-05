@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Red Social - Crear Publicación</title>
+  <link rel="stylesheet" href="create.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <nav>
+    <div class="nav-left"><a href="index.html">🔷Souls Social</a></div>
+    <div class="nav-right" id="navRight"></div>
+  </nav>
+
+  <main class="create-post-section">
+    <div class="create-card">
+      <h1 style="margin:0 0 8px 0;text-align:center;">Crear nueva publicación</h1>
+
+      <form id="postForm" enctype="multipart/form-data">
+        <!-- Campo oculto para el usuario -->
+        <input type="hidden" id="username" name="username">
+
+        <input name="title" id="title" type="text" placeholder="Título de la publicación" required>
+        <textarea name="text" placeholder="¿Qué está pasando?" required></textarea>
+        <input type="file" name="image" accept="image/*">
+        <button type="submit" class="publish-btn">Publicar</button>
+      </form>
+    </div>
+
+    <!-- Volver centrado al final -->
+    <div style="width:100%;display:flex;justify-content:center;">
+      <a href="index.html" class="back-link">Volver</a>
+    </div>
+
+    <!-- Popup de acceso -->
+    <div id="accessPopup">
+      <div class="popup-card">
+        <h2>Acceso Denegado</h2>
+        <p>Debes iniciar sesión para crear una publicación.</p>
+        <button id="popupCloseBtn">Volver al inicio</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Script: Enviar publicación -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const usernameField = document.getElementById('username');
+      if (usernameField) {
+        usernameField.value = localStorage.getItem('username') || '';
+      }
+
+      const postForm = document.getElementById('postForm');
+      postForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const btn = postForm.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.classList.add('loading');
+
+        try {
+          const res = await fetch('/api/posts', { method: 'POST', body: new FormData(postForm) });
+          if (res.ok) {
+            setTimeout(() => window.location.href = 'index.html', 420);
+          } else {
+            alert('Error al publicar');
+          }
+        } catch {
+          alert('Error de red');
+        } finally {
+          btn.disabled = false;
+          btn.classList.remove('loading');
+        }
+      });
+    });
+  </script>
+
+  <script src="create.js"></script>
+</body>
+</html>

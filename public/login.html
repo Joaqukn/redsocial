@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Iniciar sesión - RedSocial</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="login.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <nav>
+    <div class="nav-left"><a href="index.html" class="brand">🔷Souls Social</a></div>
+    <div class="nav-right" id="navRight"></div>
+  </nav>
+
+  <main class="auth-container">
+    <div class="auth-card">
+      <h2>Iniciar sesión</h2>
+
+      <form id="loginForm" class="auth-form">
+        <div class="input-with-icon">
+          <i data-lucide="mail"></i>
+          <input name="email" class="auth-input" type="email" placeholder="Correo electrónico" required />
+        </div>
+
+        <div class="password-wrapper" style="width:100%;">
+          <div class="input-with-icon" style="padding-right:92px;">
+            <i data-lucide="lock"></i>
+            <input id="passwordInput" name="password" class="auth-input" type="password" placeholder="Contraseña" required />
+          </div>
+          <button type="button" class="password-toggle" aria-label="Mostrar contraseña" data-target="passwordInput">
+            <i data-lucide="eye"></i>
+          </button>
+        </div>
+
+        <button type="submit" class="btn">Entrar</button>
+      </form>
+
+      <div style="margin-top:12px;color:var(--muted);font-size:0.95rem;">
+        ¿No tienes cuenta? <a href="register.html" style="color:var(--accent-2)">Regístrate</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Renderiza iconos
+    lucide.createIcons();
+
+    // navRight: muestra usuario o link
+    (function renderNav(){
+      const navRight = document.getElementById('navRight');
+      const username = localStorage.getItem('username');
+      navRight.innerHTML = username
+        ? `<span>👤 ${username}</span><button id="logoutBtn">Cerrar sesión</button>`
+        : `<a href="login.html">Iniciar sesión</a>`;
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) logoutBtn.addEventListener('click', ()=>{ localStorage.clear(); location.href='login.html'; });
+    })();
+
+    // password toggle (robusto, actualiza data-lucide)
+    document.querySelectorAll('.password-toggle').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const targetId = btn.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        const icon = btn.querySelector('i');
+        if (icon) {
+          icon.setAttribute('data-lucide', showing ? 'eye' : 'eye-off');
+          lucide.createIcons();
+        }
+        try { input.focus(); input.setSelectionRange(input.value.length, input.value.length); } catch {}
+        btn.setAttribute('aria-label', showing ? 'Mostrar contraseña' : 'Ocultar contraseña');
+      });
+    });
+
+    // submit handler con feedback
+    document.getElementById('loginForm').addEventListener('submit', async e=>{
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.classList.add('loading');
+      try {
+        const data = Object.fromEntries(new FormData(e.target).entries());
+        const res = await fetch('/api/users/login', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          const r = await res.json();
+          localStorage.setItem('username', r.username);
+          // small success animation then redirect
+          btn.textContent = '¡Bienvenido!';
+          setTimeout(()=> location.href='index.html', 420);
+        } else {
+          const err = await res.json().catch(()=>({message:'Error'}));
+          alert(err.message || 'Error al iniciar sesión');
+        }
+      } catch {
+        alert('Error de red. Intenta de nuevo.');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      }
+    });
+  </script>
+</body>
+</html>
