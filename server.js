@@ -8,6 +8,12 @@ import fs from 'fs';
 import compression from 'compression';
 import dotenv from 'dotenv';
 dotenv.config();
+import { fileURLToPath } from 'url';
+
+// Simula __dirname y __filename en ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 const app = express();
 app.use(cors());
@@ -235,10 +241,8 @@ app.get('/api/posts/:id', async (req, res) => {
   }
 });
 
-// --- CACHE ---
-app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store');
-  next();
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // === INICIO SERVIDOR ===
