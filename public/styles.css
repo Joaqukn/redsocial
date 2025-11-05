@@ -455,117 +455,190 @@ nav .nav-right button:hover {
 }
 
 
-/* ==================== RESPONSIVE PARA MÓVILES ==================== */
+
+
+
+/* ==================== RESPONSIVE ==================== */
+
+/* Teléfonos grandes (por debajo de 720px) */
 @media (max-width: 720px) {
-  /* ==================== NAVBAR ==================== */
   nav {
-    padding: 0 12px;
-    height: 50px;
+    padding: 0 10px;
   }
 
-  nav .nav-left a {
-    font-size: 1rem;
+  .main-section {
+    margin-top: calc(var(--nav-height) + 8px);
   }
 
-  nav .nav-right a {
-    font-size: 1rem;
-  }
-
-  nav .nav-right button {
-    font-size: 0.9rem;
-    padding: 4px 12px;
-  }
-
-  /* ==================== POSTS ==================== */
   .posts-container {
-    width: 100%;
-    padding: 0;
+    padding-left: 8px;
+    padding-right: 8px;
   }
 
   .post-card {
     padding: 12px;
   }
 
-  .post-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .post-avatar {
-    margin-bottom: 10px;
-  }
-
-  .post-actions {
-    flex-direction: column;
-    align-items: flex-start;
-    margin-top: 12px;
-  }
-
-  .post-actions button {
-    width: 100%;
-    padding: 10px 0;
-  }
-
-  /* ==================== CREAR PUBLICACIÓN ==================== */
-  .create-btn {
+    width: 36px;
+    height: 36px;
     font-size: 1rem;
-    padding: 12px 18px;
   }
 
-  /* ==================== POPUPS ==================== */
-  .modal {
-    width: 90%;
-    max-width: 100%;
-    padding: 16px;
+  .create-btn {
+    padding: 12px 16px;
+    font-size: 1rem;
+    bottom: 16px;
+    right: 16px;
   }
 
   .popup-options {
-    top: 2rem;
-    right: 0;
-    min-width: 140px;
+    top: 1.5rem;
   }
 
-  .modal button {
-    font-size: 0.9rem;
-    padding: 8px 16px;
+  .modal {
+    padding: 24px;
+  }
+}
+
+/* Teléfonos medianos (por debajo de 540px) */
+@media (max-width: 540px) {
+  nav .nav-left a {
+    font-size: 0.95rem;
   }
 
-  .profile-card {
-    width: 100%;
-    padding: 12px;
-  }
-
-  .profile-avatar {
-    font-size: 1.5rem;
+  .post-card {
     padding: 10px;
+    border-radius: 10px;
   }
 
-  .profile-avatar-img {
-    width: 50px;
-    height: 50px;
+  .post-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
   }
 
-  /* ==================== COMENTARIOS ==================== */
-  .comment-avatar {
+  .post-content h3 {
+    font-size: 1rem;
+  }
+
+  .post-content p {
+    font-size: 0.9rem;
+  }
+
+  .post-actions button {
+    font-size: 0.85rem;
+    padding: 5px 10px;
+  }
+
+  .comment-body {
+    max-width: 90%;
+  }
+
+  .create-btn {
+    font-size: 0.95rem;
+    padding: 10px 14px;
+    bottom: 14px;
+    right: 14px;
+  }
+
+  .modal {
+    width: 92%;
+    padding: 20px;
+  }
+}
+
+/* Teléfonos pequeños (por debajo de 420px) */
+@media (max-width: 420px) {
+  nav .nav-left a {
+    font-size: 0.9rem;
+  }
+
+  .nav-right a, .nav-right button {
+    font-size: 0.85rem;
+    padding: 4px 10px;
+  }
+
+  .post-card {
+    padding: 8px;
+  }
+
+  .post-avatar {
     width: 30px;
     height: 30px;
+    font-size: 0.85rem;
   }
 
-  .comment-avatar-img {
+  .post-content h3 {
+    font-size: 0.95rem;
+  }
+
+  .post-content p {
+    font-size: 0.85rem;
+  }
+
+  .comment-avatar, .comment-avatar-img {
     width: 30px;
     height: 30px;
   }
 
   .comment-body {
-    max-width: 100%;
-    padding: 4px 8px;
+    padding: 5px 8px;
+    font-size: 0.85rem;
   }
 
-  .comment-username {
+  .create-btn {
+    padding: 9px 12px;
     font-size: 0.9rem;
+    bottom: 12px;
+    right: 12px;
   }
 
-  .comment-content {
-    font-size: 0.9rem;
+  .modal {
+    width: 95%;
+    padding: 16px;
+  }
+}
+
+/* Dispositivos muy pequeños (por debajo de 340px, ej. celulares compactos o antiguos) */
+@media (max-width: 340px) {
+  nav {
+    flex-direction: column;
+    height: auto;
+    padding: 6px 10px;
+    gap: 4px;
+  }
+
+  nav .nav-left a {
+    font-size: 0.85rem;
+  }
+
+  .nav-right a, .nav-right button {
+    font-size: 0.8rem;
+  }
+
+  .posts-container {
+    gap: 14px;
+  }
+
+  .post-card {
+    padding: 6px;
+    border-radius: 8px;
+  }
+
+  .post-content p {
+    font-size: 0.8rem;
+  }
+
+  .create-btn {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    bottom: 10px;
+    right: 10px;
+  }
+
+  .modal {
+    width: 96%;
+    padding: 14px;
   }
 }

@@ -286,3 +286,116 @@ nav .brand::after {
 nav .brand:hover::after {
   width: 100%; /* la línea se expande al pasar el mouse */
 }
+
+/* =====================  LOGIN RESPONSIVE  ===================== */
+
+/* Tablets (hasta 992px) */
+@media (max-width: 992px) {
+  .auth-card {
+    width: 80%;
+    padding: 40px 28px;
+  }
+
+  .auth-card h2 {
+    font-size: 1.6rem;
+  }
+
+  .input-wrapper input {
+    font-size: 0.95rem;
+    padding: 11px 11px 11px 38px;
+  }
+
+  .btn {
+    font-size: 0.95rem;
+    padding: 12px 0;
+  }
+}
+
+/* Celulares (hasta 600px) */
+@media (max-width: 600px) {
+  body {
+    justify-content: flex-start;
+    overflow-y: auto;
+    padding-bottom: 30px;
+  }
+
+  nav {
+    height: 50px;
+    padding: 0 16px;
+  }
+
+  .auth-container {
+    margin-top: 70px;
+    padding: 16px;
+  }
+
+  .auth-card {
+    width: 92%;
+    padding: 28px 18px;
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(2,6,23,0.55);
+  }
+
+  .auth-card h2 {
+    font-size: 1.4rem;
+    margin-bottom: 18px;
+  }
+
+  .input-wrapper {
+    margin-bottom: 16px;
+  }
+
+  .input-wrapper input {
+    font-size: 0.9rem;
+    padding: 10px 10px 10px 38px;
+  }
+
+  .password-wrapper .password-toggle {
+    right: 8px;
+  }
+
+  .btn {
+    font-size: 0.9rem;
+    padding: 12px 0;
+  }
+
+  .auth-footer {
+    font-size: 0.85rem;
+  }
+
+  .popup {
+    max-width: 90%;
+    padding: 1.5rem;
+  }
+
+  .popup h2 {
+    font-size: 1.3rem;
+  }
+
+  .popup p {
+    font-size: 0.9rem;
+  }
+}
+
+/* Muy pequeños (hasta 400px) */
+@media (max-width: 400px) {
+  .auth-card {
+    width: 95%;
+    padding: 24px 16px;
+  }
+
+  .auth-card h2 {
+    font-size: 1.2rem;
+  }
+
+  .btn {
+    font-size: 0.85rem;
+  }
+}
+
+/* Monitores grandes (más de 1400px) */
+@media (min-width: 1400px) {
+  .auth-card {
+    transform: scale(1.05);
+  }
+}
