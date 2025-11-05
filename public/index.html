@@ -23,9 +23,6 @@
   <div class="modal" id="modalContent"></div>
 </div>
 
-
-
-
 <script>
 const modalOverlay = document.getElementById('modalOverlay');
 const modalContent = document.getElementById('modalContent');
@@ -84,7 +81,8 @@ async function renderPosts(){
         <div class="post-content">
           <h3>${post.title||'(Sin título)'}</h3>
           <p>${(post.text||'').replaceAll('<','&lt;').replaceAll('>','&gt;')}</p>
-          ${post.image?`<img src="${post.image}" class="post-image" loading="lazy">`:''}
+          <!-- Usamos imageBase64 primero, luego image -->
+          ${(post.imageBase64 || post.image) ? `<img src="${post.imageBase64 || post.image}" class="post-image" loading="lazy">` : ''}
         </div>
         <div class="post-actions">
           <button class="like-btn" data-post-id="${post._id}">❤️ ${post.likes||0}</button>
@@ -206,10 +204,8 @@ function attachPostHandlers(){
       `);
       document.getElementById('confirmDelete').onclick = async ()=>{
         await fetch(`/api/posts/${postId}`,{ method:'DELETE' });
-        // Remover la publicación del DOM
         const postCard = document.getElementById(`post-${postId}`);
         if(postCard) postCard.remove();
-        // Opcional: eliminar comentarios en cascada en el DOM si estaban abiertos
         const commentsList = document.getElementById('commentsList');
         if(commentsList) commentsList.innerHTML = '';
         closeModal();
@@ -218,90 +214,87 @@ function attachPostHandlers(){
       return;
     }
 
-if (target.classList.contains('focus-comment')) {
-  const postId = target.dataset.postId;
-  const postCard = document.getElementById(`post-${postId}`);
-  try {
-    const res = await fetch(`/api/posts/${postId}`);
-    if (!res.ok) { alert('Esta publicación ya no existe.'); return; }
-    const post = await res.json();
-    const comments = Array.isArray(post.comments) ? post.comments : [];
-
-    // Render de comentarios con avatar + nombre + burbuja
-    const commentsHTML = await Promise.all(comments.map(async c => {
-      let avatar = `<div class="comment-avatar">${c.user.charAt(0).toUpperCase()}</div>`;
+    // --- COMENTARIOS ---
+    if (target.classList.contains('focus-comment')) {
+      const postId = target.dataset.postId;
+      const postCard = document.getElementById(`post-${postId}`);
       try {
-        const userRes = await fetch(`/api/users/${encodeURIComponent(c.user)}`);
-        if (userRes.ok){
-          const userData = await userRes.json();
-          if(userData.avatar) avatar = `<img src="${userData.avatar}" class="comment-avatar-img">`;
-        }
-      } catch {}
-      return `
-        <div class="comment-text">
-          ${avatar}
-          <div class="comment-body">
-            <div class="comment-username">${c.user}</div>
-            <div class="comment-content">${c.text}</div>
+        const res = await fetch(`/api/posts/${postId}`);
+        if (!res.ok) { alert('Esta publicación ya no existe.'); return; }
+        const post = await res.json();
+        const comments = Array.isArray(post.comments) ? post.comments : [];
+
+        const commentsHTML = await Promise.all(comments.map(async c => {
+          let avatar = `<div class="comment-avatar">${c.user.charAt(0).toUpperCase()}</div>`;
+          try {
+            const userRes = await fetch(`/api/users/${encodeURIComponent(c.user)}`);
+            if (userRes.ok){
+              const userData = await userRes.json();
+              if(userData.avatar) avatar = `<img src="${userData.avatar}" class="comment-avatar-img">`;
+            }
+          } catch {}
+          return `
+            <div class="comment-text">
+              ${avatar}
+              <div class="comment-body">
+                <div class="comment-username">${c.user}</div>
+                <div class="comment-content">${c.text}</div>
+              </div>
+            </div>`;
+        }));
+
+        showModal(`
+          <h3>Comentarios</h3>
+          <div id="commentsList" style="max-height:250px; overflow-y:auto; margin-bottom:10px; padding:10px; border:1px solid #333; border-radius:12px; background:#0a1022;">
+            ${commentsHTML.join('') || '<p style="color:#98a3b3;">No hay comentarios todavía.</p>'}
           </div>
-        </div>`;
-    }));
+          <textarea id="newComment" placeholder="Escribe un comentario..." style="width:100%; padding:8px; border-radius:12px; background:#081430; color:#e8f7ff; margin-bottom:10px;"></textarea>
+          <button class="confirm" id="postCommentBtn">Comentar</button>
+          <button class="cancel" id="cancelCommentBtn">Cancelar</button>
+        `);
 
-    showModal(`
-      <h3>Comentarios</h3>
-      <div id="commentsList" style="max-height:250px; overflow-y:auto; margin-bottom:10px; padding:10px; border:1px solid #333; border-radius:12px; background:#0a1022;">
-        ${commentsHTML.join('') || '<p style="color:#98a3b3;">No hay comentarios todavía.</p>'}
-      </div>
-      <textarea id="newComment" placeholder="Escribe un comentario..." style="width:100%; padding:8px; border-radius:12px; background:#081430; color:#e8f7ff; margin-bottom:10px;"></textarea>
-      <button class="confirm" id="postCommentBtn">Comentar</button>
-      <button class="cancel" id="cancelCommentBtn">Cancelar</button>
-    `);
+        document.getElementById('cancelCommentBtn').onclick = closeModal;
 
-    document.getElementById('cancelCommentBtn').onclick = closeModal;
+        document.getElementById('postCommentBtn').onclick = async () => {
+          const username = localStorage.getItem('username');
+          const text = document.getElementById('newComment').value.trim();
+          if(!username){ alert('Debes iniciar sesión para comentar.'); return; }
+          if(!text){ alert('El comentario no puede estar vacío.'); return; }
 
-    document.getElementById('postCommentBtn').onclick = async () => {
-      const username = localStorage.getItem('username');
-      const text = document.getElementById('newComment').value.trim();
-      if(!username){ alert('Debes iniciar sesión para comentar.'); return; }
-      if(!text){ alert('El comentario no puede estar vacío.'); return; }
+          const res = await fetch(`/api/posts/${postId}/comment`, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({ user: username, text })
+          });
+          if(!res.ok){ const err = await res.json().catch(()=>({message:'Error desconocido'})); alert(err.message); return; }
 
-      const res = await fetch(`/api/posts/${postId}/comment`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ user: username, text })
-      });
-      if(!res.ok){ const err = await res.json().catch(()=>({message:'Error desconocido'})); alert(err.message); return; }
+          const commentsList = document.getElementById('commentsList');
+          if(!commentsList.querySelector('p')) commentsList.innerHTML='';
 
-      const commentsList = document.getElementById('commentsList');
-      if(!commentsList.querySelector('p')) commentsList.innerHTML='';
+          const commentEl = document.createElement('div');
+          commentEl.className='comment-text';
+          commentEl.innerHTML = `
+            <div class="comment-avatar">${username.charAt(0).toUpperCase()}</div>
+            <div class="comment-body">
+              <div class="comment-username">${username}</div>
+              <div class="comment-content">${text}</div>
+            </div>`;
+          commentsList.prepend(commentEl);
 
-      // Nuevo comentario en estilo Discord
-      const commentEl = document.createElement('div');
-      commentEl.className='comment-text';
-      commentEl.innerHTML = `
-        <div class="comment-avatar">${username.charAt(0).toUpperCase()}</div>
-        <div class="comment-body">
-          <div class="comment-username">${username}</div>
-          <div class="comment-content">${text}</div>
-        </div>`;
-      commentsList.prepend(commentEl);
+          const commentBtn = postCard.querySelector('.focus-comment');
+          const currentCount = parseInt(commentBtn.textContent.split(' ')[1]||0);
+          commentBtn.textContent=`💬 ${currentCount+1}`;
+          document.getElementById('newComment').value='';
+        };
 
-      // Actualizar contador
-      const commentBtn = postCard.querySelector('.focus-comment');
-      const currentCount = parseInt(commentBtn.textContent.split(' ')[1]||0);
-      commentBtn.textContent=`💬 ${currentCount+1}`;
-      document.getElementById('newComment').value='';
-    };
-
-  } catch(err){
-    console.error('Error cargando comentarios:', err);
-    alert('Error cargando comentarios');
-  }
-}
+      } catch(err){
+        console.error('Error cargando comentarios:', err);
+        alert('Error cargando comentarios');
+      }
+    }
   });
 } 
 </script>
-
 
 </body>
 </html>

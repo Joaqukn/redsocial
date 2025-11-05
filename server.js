@@ -1,12 +1,13 @@
-const express = require('express');
-const path = require('path');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const bcrypt = require('bcrypt');
-const multer = require('multer');
-const fs = require('fs');
-const compression = require('compression');
-require('dotenv').config();
+import express from 'express';
+import path from 'path';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import bcrypt from 'bcrypt';
+import multer from 'multer';
+import fs from 'fs';
+import compression from 'compression';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 app.use(cors());
@@ -34,6 +35,7 @@ const postSchema = new mongoose.Schema({
   title: String,
   text: String,
   image: String,
+  imageBase64: String,
   created_at: { type: Date, default: Date.now },
   likes: { type: Number, default: 0 },
   likedBy: { type: [String], default: [] }
@@ -49,7 +51,7 @@ const commentSchema = new mongoose.Schema({
 const Comment = mongoose.model('Comment', commentSchema);
 
 // === CONFIG MULTER ===
-const uploadDir = path.join(__dirname, 'public', 'uploads');
+const uploadDir = path.join(process.cwd(), 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
@@ -118,9 +120,17 @@ app.get('/api/users/:username', async (req, res) => {
 app.post('/api/posts', upload.single('image'), async (req, res) => {
   try {
     const { title, text, username } = req.body;
-    const image = req.file ? '/uploads/' + req.file.filename : null;
+    let imageBase64 = null;
 
-    const post = new Post({ user: username || 'Anónimo', title, text, image });
+    if(req.file){
+      const imgPath = path.join(uploadDir, req.file.filename);
+      const mimeType = req.file.mimetype;
+      const imgData = fs.readFileSync(imgPath, { encoding: 'base64' });
+      imageBase64 = `data:${mimeType};base64,${imgData}`;
+      fs.unlinkSync(imgPath); // elimina archivo físico
+    }
+
+    const post = new Post({ user: username || 'Anónimo', title, text, image: null, imageBase64 });
     await post.save();
     res.status(201).json({ message: 'Publicación creada correctamente' });
   } catch (err) {
@@ -145,7 +155,6 @@ app.get('/api/posts', async (req, res) => {
   }
 });
 
-// --- LIKE ---
 app.post('/api/posts/:id/like', async (req, res) => {
   try {
     const { username } = req.body;
@@ -169,7 +178,6 @@ app.post('/api/posts/:id/like', async (req, res) => {
   }
 });
 
-// --- COMENTARIOS ---
 app.post('/api/posts/:id/comment', async (req, res) => {
   try {
     const { user, text } = req.body;
@@ -182,7 +190,6 @@ app.post('/api/posts/:id/comment', async (req, res) => {
   }
 });
 
-// --- EDITAR ---
 app.put('/api/posts/:id', async (req, res) => {
   try {
     const { title, text } = req.body;
@@ -194,24 +201,17 @@ app.put('/api/posts/:id', async (req, res) => {
   }
 });
 
-// --- ELIMINAR POST Y SUS COMENTARIOS ---
 app.delete('/api/posts/:id', async (req, res) => {
   try {
     const postId = req.params.id;
-
-    // Eliminar el post
     await Post.findByIdAndDelete(postId);
-
-    // Eliminar los comentarios asociados
     await Comment.deleteMany({ post_id: postId });
-
     res.json({ message: 'Publicación y comentarios eliminados correctamente' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error al eliminar publicación' });
   }
 });
-
 
 app.get('/api/posts/:id', async (req, res) => {
   const { id } = req.params;
@@ -221,16 +221,14 @@ app.get('/api/posts/:id', async (req, res) => {
     const post = await Post.findById(id).lean();
     if (!post) return res.status(404).json({ message: 'Post no encontrado' });
 
-    const comments = await Comment.find({ post_id: post._id }).lean(); // <-- post_id
+    const comments = await Comment.find({ post_id: post._id }).lean();
     post.comments = comments;
-
     res.json(post);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error al obtener post' });
   }
 });
-
 
 // --- CACHE ---
 app.use((req, res, next) => {
