@@ -642,3 +642,188 @@ nav .nav-right button:hover {
     padding: 14px;
   }
 }
+
+/* 🐻‍❄️ Loader Polar Souls Social */
+.polar-loader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at bottom, #0a0e1a, #000);
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  z-index: 9999;
+  transition: opacity 0.4s ease;
+}
+.polar-loader.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.polar-loader .ice {
+  width: 120px;
+  height: 60px;
+  background: linear-gradient(to bottom, #bdf0ff 0%, #e0f7ff 100%);
+  border-radius: 50px 50px 20px 20px;
+  position: relative;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.bear {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 60px;
+}
+
+.bear .ear {
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+}
+.bear .ear.left { left: 10px; }
+.bear .ear.right { right: 10px; }
+
+.bear .head {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 50px;
+  background: #fff;
+  border-radius: 50% 50% 40% 40%;
+  box-shadow: 0 2px 4px rgba(255,255,255,0.2);
+}
+
+.face .eye {
+  width: 6px;
+  height: 6px;
+  background: #000;
+  border-radius: 50%;
+  position: absolute;
+  top: 18px;
+  animation: blink 4s infinite;
+}
+.face .eye.left { left: 16px; }
+.face .eye.right { right: 16px; }
+
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+.face .nose {
+  width: 10px;
+  height: 8px;
+  background: #222;
+  border-radius: 50%;
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.polar-loader p {
+  margin-top: 12px;
+  color: #a0b9ff;
+  font-size: 0.9em;
+  letter-spacing: 0.5px;
+  animation: pulse 1.6s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+
+/* 🔹 Chat flotante y modal */
+
+.chat-btn {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #007bff;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 0 10px #000;
+  z-index: 999;
+}
+
+.profile-avatar-mini {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #555;
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+.profile-avatar-mini.active::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #0f0;
+  border: 2px solid #111;
+  border-radius: 50%;
+  bottom: 0;
+  right: 0;
+}
+.profile-avatar-mini.inactive::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #f00;
+  border: 2px solid #111;
+  border-radius: 50%;
+  bottom: 0;
+  right: 0;
+}
+
+.chat-messages {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 5px;
+  padding: 5px;
+  background: #0a0a1a;
+  border-radius: 10px;
+  color: #fff;
+}
+.chat-typing {
+  height: 16px;
+  color: #ccc;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+.chat-input {
+  width: 100%;
+  padding: 6px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background: #111;
+  color: #fff;
+}
+.message {
+  margin: 2px 0;
+}

@@ -1,17 +1,187 @@
-CREATE DATABASE redsocial;
+test loaders
 
-USE redsocial;
+<!-- 🐻‍❄️ Loader Polar -->
+<div id="polarLoader" class="polar-loader">
+  <div class="ice">
+    <div class="bear">
+      <div class="ear left"></div>
+      <div class="ear right"></div>
+      <div class="head">
+        <div class="face">
+          <div class="eye left"></div>
+          <div class="eye right"></div>
+          <div class="nose"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p>Cargando publicaciones...</p>
+</div>
 
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(100) NOT NULL
-);
+/* 🐻‍❄️ Loader Polar Souls Social */
+.polar-loader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at bottom, #0a0e1a, #000);
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  z-index: 9999;
+  transition: opacity 0.4s ease;
+}
+.polar-loader.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
 
--- Insertar usuario de prueba
-INSERT INTO users (username, email, password) VALUES ('testuser', 'test@example.com', '123456');    
+.polar-loader .ice {
+  width: 120px;
+  height: 60px;
+  background: linear-gradient(to bottom, #bdf0ff 0%, #e0f7ff 100%);
+  border-radius: 50px 50px 20px 20px;
+  position: relative;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.bear {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 60px;
+}
+
+.bear .ear {
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+}
+.bear .ear.left { left: 10px; }
+.bear .ear.right { right: 10px; }
+
+.bear .head {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 50px;
+  background: #fff;
+  border-radius: 50% 50% 40% 40%;
+  box-shadow: 0 2px 4px rgba(255,255,255,0.2);
+}
+
+.face .eye {
+  width: 6px;
+  height: 6px;
+  background: #000;
+  border-radius: 50%;
+  position: absolute;
+  top: 18px;
+  animation: blink 4s infinite;
+}
+.face .eye.left { left: 16px; }
+.face .eye.right { right: 16px; }
+
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+.face .nose {
+  width: 10px;
+  height: 8px;
+  background: #222;
+  border-radius: 50%;
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.polar-loader p {
+  margin-top: 12px;
+  color: #a0b9ff;
+  font-size: 0.9em;
+  letter-spacing: 0.5px;
+  animation: pulse 1.6s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
 
 
 
-falta la otra base de dato
+
+async function renderPosts(){
+   const loader = document.getElementById('polarLoader');
+   loader.classList.remove('hidden');
+
+  try {
+    const res = await fetch('/api/posts');
+    const posts = await res.json();
+    const postsContainer = document.getElementById('postsContainer');
+    const currentUser = localStorage.getItem('username');
+    const isAdmin = currentUser==='admin';
+  
+
+    if(!posts.length){
+      postsContainer.innerHTML = '<div class="center-empty card">No hay publicaciones todavía.</div>';
+      return;
+      loader.classList.add('hidden');
+    }
+
+    postsContainer.innerHTML = posts.map(post=> {
+      const comments = post.comments || [];
+      return `
+      <article class="post-card" id="post-${post._id}">
+        <div class="post-header">
+          <div class="post-user">
+            <div class="post-avatar" data-username="${post.user}">${(post.user||'A').charAt(0).toUpperCase()}</div>
+            <div>
+              <div class="user-name" data-username="${post.user}">${post.user}</div>
+              <div class="post-date">${new Date(post.created_at||Date.now()).toLocaleString()}</div>
+            </div>
+          </div>
+          ${(currentUser===post.user||isAdmin)?`
+          <div class="post-controls">
+            <button class="more-btn" data-id="${post._id}">⋯</button>
+            <div class="popup-options" id="popup-${post._id}">
+              <button class="edit-post" data-id="${post._id}" data-title="${post.title||''}" data-text="${post.text||''}">Editar</button>
+              <button class="delete-post" data-id="${post._id}">Eliminar</button>
+            </div>
+          </div>`:''}
+        </div>
+        <div class="post-content">
+          <h3>${post.title||'(Sin título)'}</h3>
+          <p>${(post.text||'').replaceAll('<','&lt;').replaceAll('>','&gt;')}</p>
+          <!-- Usamos imageBase64 primero, luego image -->
+          ${(post.imageBase64 || post.image) ? `<img src="${post.imageBase64 || post.image}" class="post-image" loading="lazy">` : ''}
+        </div>
+        <div class="post-actions">
+          <button class="like-btn" data-post-id="${post._id}">❤️ ${post.likes||0}</button>
+          <button class="focus-comment" data-post-id="${post._id}">💬 ${comments.length}</button>
+        </div>
+      </article>`;
+    }).join('');
+
+    attachPostHandlers();
+  } catch(err){
+    console.error(err);
+    document.getElementById('postsContainer').innerHTML='<div class="center-empty card">Error al cargar publicaciones.</div>';
+    } finally {
+    loader.classList.add('hidden');
+  }
+}
