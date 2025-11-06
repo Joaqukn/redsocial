@@ -643,7 +643,7 @@ nav .nav-right button:hover {
   }
 }
 
-/* 🐻‍❄️ Loader Polar Souls Social */
+/* 🐻‍❄️ Loader Polar Souls Social - Responsive */
 .polar-loader {
   position: fixed;
   inset: 0;
@@ -663,8 +663,10 @@ nav .nav-right button:hover {
 }
 
 .polar-loader .ice {
-  width: 120px;
-  height: 60px;
+  width: 25vw;
+  max-width: 150px;
+  height: 12vw;
+  max-height: 75px;
   background: linear-gradient(to bottom, #bdf0ff 0%, #e0f7ff 100%);
   border-radius: 50px 50px 20px 20px;
   position: relative;
@@ -677,47 +679,55 @@ nav .nav-right button:hover {
 
 .bear {
   position: absolute;
-  bottom: 40px;
+  bottom: calc(25vw / 2 - 10px);
   left: 50%;
   transform: translateX(-50%);
-  width: 80px;
-  height: 60px;
+  width: 20vw;
+  max-width: 80px;
+  height: 15vw;
+  max-height: 60px;
 }
 
 .bear .ear {
-  width: 18px;
-  height: 18px;
+  width: 4.5vw;
+  max-width: 18px;
+  height: 4.5vw;
+  max-height: 18px;
   background: #fff;
   border-radius: 50%;
   position: absolute;
   top: 0;
 }
-.bear .ear.left { left: 10px; }
-.bear .ear.right { right: 10px; }
+.bear .ear.left { left: 2.5vw; max-left:10px; }
+.bear .ear.right { right: 2.5vw; max-right:10px; }
 
 .bear .head {
   position: absolute;
-  top: 10px;
+  top: 2.5vw;
   left: 50%;
   transform: translateX(-50%);
-  width: 60px;
-  height: 50px;
+  width: 15vw;
+  max-width: 60px;
+  height: 12.5vw;
+  max-height: 50px;
   background: #fff;
   border-radius: 50% 50% 40% 40%;
   box-shadow: 0 2px 4px rgba(255,255,255,0.2);
 }
 
 .face .eye {
-  width: 6px;
-  height: 6px;
+  width: 1.5vw;
+  max-width: 6px;
+  height: 1.5vw;
+  max-height: 6px;
   background: #000;
   border-radius: 50%;
   position: absolute;
-  top: 18px;
+  top: 4.5vw;
   animation: blink 4s infinite;
 }
-.face .eye.left { left: 16px; }
-.face .eye.right { right: 16px; }
+.face .eye.left { left: 4vw; max-left:16px; }
+.face .eye.right { right: 4vw; max-right:16px; }
 
 @keyframes blink {
   0%, 90%, 100% { transform: scaleY(1); }
@@ -725,105 +735,60 @@ nav .nav-right button:hover {
 }
 
 .face .nose {
-  width: 10px;
-  height: 8px;
+  width: 2.5vw;
+  max-width: 10px;
+  height: 2vw;
+  max-height: 8px;
   background: #222;
   border-radius: 50%;
   position: absolute;
-  top: 28px;
+  top: 7vw;
   left: 50%;
   transform: translateX(-50%);
 }
 
 .polar-loader p {
-  margin-top: 12px;
+  margin-top: 3vw;
   color: #a0b9ff;
-  font-size: 0.9em;
+  font-size: 3.5vw;
+  max-font-size: 14px;
   letter-spacing: 0.5px;
   animation: pulse 1.6s infinite;
+  text-align: center;
 }
 @keyframes pulse {
   0%, 100% { opacity: 0.7; }
   50% { opacity: 1; }
 }
 
-
-/* 🔹 Chat flotante y modal */
-
-.chat-btn {
-  position: fixed;
-  left: 20px;
-  bottom: 20px;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: #007bff;
-  color: #fff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 0 10px #000;
-  z-index: 999;
-}
-
-.profile-avatar-mini {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #555;
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-}
-.profile-avatar-mini.active::after {
-  content: '';
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: #0f0;
-  border: 2px solid #111;
-  border-radius: 50%;
-  bottom: 0;
-  right: 0;
-}
-.profile-avatar-mini.inactive::after {
-  content: '';
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: #f00;
-  border: 2px solid #111;
-  border-radius: 50%;
-  bottom: 0;
-  right: 0;
-}
-
-.chat-messages {
-  max-height: 300px;
-  overflow-y: auto;
-  margin-bottom: 5px;
-  padding: 5px;
-  background: #0a0a1a;
-  border-radius: 10px;
-  color: #fff;
-}
-.chat-typing {
-  height: 16px;
-  color: #ccc;
-  font-size: 12px;
-  margin-bottom: 5px;
-}
-.chat-input {
-  width: 100%;
-  padding: 6px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  background: #111;
-  color: #fff;
-}
-.message {
-  margin: 2px 0;
+/* 🔹 Media Queries para móviles y tablets */
+@media (max-width: 768px) {
+  .polar-loader .ice {
+    width: 35vw;
+    height: 16vw;
+  }
+  .bear {
+    width: 25vw;
+    height: 18vw;
+    bottom: calc(16vw / 2 - 10px);
+  }
+  .bear .ear {
+    width: 5vw;
+    height: 5vw;
+  }
+  .bear .head {
+    width: 20vw;
+    height: 15vw;
+  }
+  .face .eye {
+    width: 2vw;
+    height: 2vw;
+  }
+  .face .nose {
+    width: 3vw;
+    height: 2.5vw;
+  }
+  .polar-loader p {
+    font-size: 4vw;
+  }
 }
