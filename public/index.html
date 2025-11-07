@@ -138,21 +138,14 @@ async function renderPosts() {
       }
 
       return `<article class="post-card ${betada ? 'post-warn' : ''}" id="post-${post._id}">
-      <div class="post-header">
-        <div class="post-user">
-          <div class="post-avatar" data-username="${post.user}">
-            ${
-              post.userAvatar
-                ? `<img src="${post.userAvatar}" alt="${post.user}" class="avatar-img">`
-                : (post.user || 'A').charAt(0).toUpperCase()
-            }
+        <div class="post-header">
+          <div class="post-user">
+            <div class="post-avatar" data-username="${post.user}">${(post.user || 'A').charAt(0).toUpperCase()}</div>
+            <div>
+              <div class="user-name" data-username="${post.user}">${post.user}</div>
+              <div class="post-date">${new Date(post.created_at || Date.now()).toLocaleString()}</div>
+            </div>
           </div>
-          <div>
-            <div class="user-name" data-username="${post.user}">${post.user}</div>
-            <div class="post-date">${new Date(post.created_at || Date.now()).toLocaleString()}</div>
-          </div>
-        </div>
-      </div>
           ${(currentUser === post.user || isAdmin) ? `
           <div class="post-controls">
             <button class="more-btn" data-id="${post._id}">⋯</button>
@@ -395,50 +388,6 @@ async function updatePostCard(postId){
     card.classList.toggle('post-warn', betada && !(currentUser===post.user || isAdmin));
   }catch(err){console.error(err);}
 }
-
-async function getAvatar(username) {
-  try {
-    const res = await fetch(`/api/users/${encodeURIComponent(username)}/avatar`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.avatar;
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
-}
-
-async function renderPosts() {
-  const posts = await fetch('/api/posts').then(r => r.json());
-  const postsContainer = document.getElementById('postsContainer');
-  
-  postsContainer.innerHTML = '';
-
-  for (const post of posts) {
-    const avatar = await getAvatar(post.user); // aquí pedimos la foto actualizada
-    const postHTML = `
-      <article class="post-card" id="post-${post._id}">
-        <div class="post-header">
-          <div class="post-user">
-            <div class="post-avatar" data-username="${post.user}">
-              ${avatar ? `<img src="${avatar}" class="avatar-img">` : (post.user || 'A').charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <div class="user-name" data-username="${post.user}">${post.user}</div>
-              <div class="post-date">${new Date(post.created_at || Date.now()).toLocaleString()}</div>
-            </div>
-          </div>
-        </div>
-        <div class="post-content">
-          <h3>${post.title || '(Sin título)'}</h3>
-          <p>${post.text || ''}</p>
-        </div>
-      </article>
-    `;
-    postsContainer.innerHTML += postHTML;
-  }
-}
-
 </script>
 </body>
 </html>
