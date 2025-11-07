@@ -1,4 +1,4 @@
-// server.js
+
 import express from 'express';
 import path from 'path';
 import mongoose from 'mongoose';
@@ -19,7 +19,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// ===== Middleware =====
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(compression());
@@ -32,19 +32,18 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'public'), { etag: false, lastModified: false, maxAge: 0, cacheControl: false }));
 
-// === CONEXIÓN A MONGODB ===
+
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/infordle';
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Conectado a MongoDB'))
   .catch(err => console.error('Error al conectar con MongoDB:', err));
 
-// === MODELOS ===
 const userSchema = new mongoose.Schema({
   username: { type: String, unique: true },
   email: { type: String, unique: true },
   password: String,
   bio: String,
-  avatarBase64: String, // <-- Cambio: avatar en Base64
+  avatarBase64: String,
   language: { type: String, default: 'es' }
 });
 const User = mongoose.model('User', userSchema);
@@ -69,11 +68,11 @@ const commentSchema = new mongoose.Schema({
 });
 const Comment = mongoose.model('Comment', commentSchema);
 
-// === CONFIG MULTER (temporal para recibir archivo) ===
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// === HTTP SERVER + SOCKET.IO ===
+
 const server = createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
@@ -82,7 +81,7 @@ io.on('connection', socket => {
   socket.on('disconnect', () => console.log('🔴 Cliente desconectado'));
 });
 
-// === RUTAS DE USUARIOS ===
+
 app.post('/api/users/register', upload.single('avatar'), async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -121,7 +120,7 @@ app.post('/api/users/login', async (req, res) => {
   }
 });
 
-// === PERFIL ===
+
 app.get('/api/profile/:username', async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username }).lean();
@@ -161,7 +160,7 @@ app.put('/api/profile/:username', upload.single('avatar'), async (req, res) => {
   }
 });
 
-// === POST, LIKE, COMMENT, EDIT, DELETE ===
+
 app.post('/api/posts', upload.single('image'), async (req, res) => {
   try {
     const { title, text, username } = req.body;
@@ -273,12 +272,12 @@ app.get('/api/posts/:id', async (req, res) => {
   }
 });
 
-// Servir SPA
+
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// === INICIO SERVIDOR ===
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
 

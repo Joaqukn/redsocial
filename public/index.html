@@ -57,9 +57,7 @@
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-/* ---------------------------
-   SISTEMA ANTI-INSULTOS
---------------------------- */
+
 const palabrasProhibidas = [
   "idiota","imbecil","tonto","estupido","mierda","puta","puto","forro",
   "gil","pajero","concha","pelotudo","marica","rata","zorra","tarado",
@@ -71,9 +69,7 @@ function contieneInsultos(texto){
   return palabrasProhibidas.some(p => t.includes(p));
 }
 
-/* ---------------------------
-   ALERT BOX
---------------------------- */
+
 function showAlert(msg, type="warn"){
   const box=document.createElement("div");
   box.textContent=msg;
@@ -91,18 +87,14 @@ function showAlert(msg, type="warn"){
   },4000);
 }
 
-/* ---------------------------
-   MODAL
---------------------------- */
+
 const modalOverlay = document.getElementById('modalOverlay');
 const modalContent = document.getElementById('modalContent');
 function showModal(html){ modalContent.innerHTML = html; modalOverlay.classList.add('active'); }
 function closeModal(){ modalOverlay.classList.remove('active'); }
 modalOverlay.addEventListener('click', e => { if(e.target===modalOverlay) closeModal(); });
 
-/* ---------------------------
-   LOGIN Y NAV
---------------------------- */
+
 document.addEventListener('DOMContentLoaded',()=>{
   const navRight=document.getElementById('navRight');
   const username=localStorage.getItem('username');
@@ -111,12 +103,10 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.getElementById('logoutBtn').onclick=()=>{localStorage.clear();location.href='login.html';};
   }else navRight.innerHTML=`<a href="login.html">Iniciar sesión</a>`;
 
-  renderPosts(); // carga inicial
+  renderPosts(); 
 });
 
-/* ---------------------------
-   RENDER POSTS
---------------------------- */
+
 async function renderPosts() {
   const loader = document.getElementById('polarLoader');
   const postsContainer = document.getElementById('postsContainer');
@@ -150,7 +140,7 @@ async function renderPosts() {
       return `<article class="post-card ${betada ? 'post-warn' : ''}" id="post-${post._id}">
         <div class="post-header">
           <div class="post-user">
-            <div class="post-avatar" data-username="${post.user}">${(post.user || 'A').charAt(0).toUpperCase()}</div>
+            <div class="post-avatar" data-username="${avatarHTML}"</div>
             <div>
               <div class="user-name" data-username="${post.user}">${post.user}</div>
               <div class="post-date">${new Date(post.created_at || Date.now()).toLocaleString()}</div>
@@ -187,9 +177,7 @@ async function renderPosts() {
   }
 }
 
-/* ---------------------------
-   HANDLERS POSTS
---------------------------- */
+
 function attachPostHandlers(){
   const container=document.getElementById('postsContainer');
   const currentUser=localStorage.getItem('username');
@@ -198,7 +186,6 @@ function attachPostHandlers(){
   container.addEventListener('click',async e=>{
     const t=e.target;
 
-    /* LIKE */
     if(t.classList.contains('like-btn')){
       const postId=t.dataset.postId;
       if(!currentUser){showAlert("⚠️ Debes iniciar sesión","warn");return;}
@@ -215,7 +202,7 @@ function attachPostHandlers(){
       return;
     }
 
-    /* MINI-PERFILES */
+
     const u = t.closest('.post-avatar,.user-name');
     if(u){
       const username = u.dataset.username;
@@ -243,7 +230,7 @@ function attachPostHandlers(){
       return;
     }
 
-    /* MÁS OPCIONES (EDITAR / ELIMINAR) */
+   
     if(t.classList.contains('more-btn')){
       const postId=t.dataset.id;
       const popup=document.getElementById(`popup-${postId}`);
