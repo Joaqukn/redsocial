@@ -284,6 +284,15 @@ app.get(/.*/, (req, res) => {
 });
 
 
+app.get('/api/users/:username/avatar', async (req, res) => {
+  const username = req.params.username;
+  const user = await User.findOne({ username });
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  res.json({ avatar: user.avatar || null });
+});
+
+
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
 
