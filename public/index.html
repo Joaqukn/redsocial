@@ -346,42 +346,75 @@ setInterval(()=>{sleepText.textContent=zPhases[i];i=(i+1)%zPhases.length;},700);
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
 /* ---------------------------
-   SOCKET.IO EN VIVO
+   SOCKET.IO EN VIVO OPTIMIZADO
 --------------------------- */
-const socket=io();
+const socket = io();
+  
+// Función para re-renderizar un post específico
+async function updatePostCard(postId){
+  try {
+    const res = await fetch(`/api/posts/${postId}`);
+    if(!res.ok) return;
+    const post = await res.json();
+    const card = document.getElementById(`post-${postId}`);
+    if(!card) return;
 
-// Recarga general cuando hay cambios
-socket.on('postsUpdated',()=>{renderPosts();});
+    const comments = post.comments || [];
+    const texto = `${post.title||''} ${post.text||''}`;
+    const betada = contieneInsultos(texto);
+    const currentUser = localStorage.getItem('username');
+    const isAdmin = currentUser === 'admin';
 
-// Actualizaciones específicas
-socket.on('postLiked', postId=>{
-  const btn=document.querySelector(`#post-${postId} .like-btn`);
-  if(btn){
-    fetch(`/api/posts/${postId}`).then(r=>r.json()).then(d=>{btn.textContent=`❤️ ${d.likes||0}`;});
-  }
+    // Re-render del HTML completo del artículo
+    card.outerHTML = `<article class="post-card ${betada?'post-warn':''}" id="post-${post._id}">
+      <div class="post-header">
+        <div class="post-user">
+          <div class="post-avatar" data-username="${post.user}">${(post.user||'A').charAt(0).toUpperCase()}</div>
+          <div><div class="user-name" data-username="${post.user}">${post.user}</div>
+          <div class="post-date">${new Date(post.created_at||Date.now()).toLocaleString()}</div></div>
+        </div>
+        ${(currentUser===post.user||isAdmin)?`
+        <div class="post-controls">
+          <button class="more-btn" data-id="${post._id}">⋯</button>
+          <div class="popup-options" id="popup-${post._id}">
+            <button class="edit-post" data-id="${post._id}" data-title="${post.title||''}" data-text="${post.text||''}">Editar</button>
+            <button class="delete-post" data-id="${post._id}">Eliminar</button>
+          </div>
+        </div>`:''}
+      </div>
+      <div class="post-content">
+        <h3>${post.title||'(Sin título)'}</h3>
+        <p>${(post.text||'').replaceAll('<','&lt;').replaceAll('>','&gt;')}</p>
+        ${(post.imageBase64||post.image)?`<img src="${post.imageBase64||post.image}" class="post-image" loading="lazy">`:''}
+        ${betada?`<p style="color:#ffb84d;font-size:0.9em;margin-top:8px;">⚠️ Contiene lenguaje inapropiado (solo autor/admin pueden verla).</p>`:''}
+      </div>
+      <div class="post-actions">
+        <button class="like-btn" data-post-id="${post._id}">❤️ ${post.likes||0}</button>
+        <button class="focus-comment" data-post-id="${post._id}">💬 ${comments.length}</button>
+      </div>
+    </article>`;
+
+    attachPostHandlers(); // re-attach handlers
+  } catch(err) { console.error(err); }
+}
+
+// Likes en vivo
+socket.on('postLiked', postId => { updatePostCard(postId); });
+
+// Comentarios en vivo
+socket.on('commentAdded', postId => { updatePostCard(postId); });
+
+// Post editado
+socket.on('postEdited', postId => { updatePostCard(postId); });
+
+// Post eliminado
+socket.on('postDeleted', postId => {
+  const card = document.getElementById(`post-${postId}`);
+  if(card) card.remove();
 });
-socket.on('commentAdded', postId=>{
-  const btn=document.querySelector(`#post-${postId} .focus-comment`);
-  if(btn){
-    fetch(`/api/posts/${postId}`).then(r=>r.json()).then(d=>{
-      btn.textContent=`💬 ${Array.isArray(d.comments)?d.comments.length:0}`;
-    });
-  }
-});
-socket.on('postDeleted', postId=>{
-  const el=document.getElementById(`post-${postId}`);
-  if(el) el.remove();
-});
-socket.on('postEdited', postId=>{
-  fetch(`/api/posts/${postId}`).then(r=>r.json()).then(post=>{
-    const card=document.getElementById(`post-${postId}`);
-    if(card){
-      card.querySelector('h3').textContent=post.title||'(Sin título)';
-      card.querySelector('.post-content p').textContent=post.text||'';
-      card.classList.remove('post-warn');
-    }
-  });
-});
+
+// Recarga completa si hay cambios masivos
+socket.on('postsUpdated', () => { renderPosts(); });
 </script>
 </body>
 </html>
