@@ -55,16 +55,8 @@
   gap: 10px;
 "></div>
 
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-/* ---------------------------
-   VARIABLES / UTILIDADES
---------------------------- */
-const modalOverlay = document.getElementById('modalOverlay');
-const modalContent = document.getElementById('modalContent');
-function showModal(html){ modalContent.innerHTML = html; modalOverlay.classList.add('active'); }
-function closeModal(){ modalOverlay.classList.remove('active'); }
-modalOverlay.addEventListener('click', e => { if(e.target===modalOverlay) closeModal(); });
-
 /* ---------------------------
    SISTEMA ANTI-INSULTOS
 --------------------------- */
@@ -100,6 +92,15 @@ function showAlert(msg, type="warn"){
 }
 
 /* ---------------------------
+   MODAL
+--------------------------- */
+const modalOverlay = document.getElementById('modalOverlay');
+const modalContent = document.getElementById('modalContent');
+function showModal(html){ modalContent.innerHTML = html; modalOverlay.classList.add('active'); }
+function closeModal(){ modalOverlay.classList.remove('active'); }
+modalOverlay.addEventListener('click', e => { if(e.target===modalOverlay) closeModal(); });
+
+/* ---------------------------
    LOGIN Y NAV
 --------------------------- */
 document.addEventListener('DOMContentLoaded',()=>{
@@ -119,9 +120,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 async function renderPosts() {
   const loader = document.getElementById('polarLoader');
   const postsContainer = document.getElementById('postsContainer');
-
-  if (loader) loader.classList.remove('hidden');  // ✅ solo si existe
-  if (!postsContainer) return;                     // 🚨 protege si no existe
+  if (loader) loader.classList.remove('hidden');
+  if (!postsContainer) return;
 
   try {
     const res = await fetch('/api/posts');
@@ -151,8 +151,10 @@ async function renderPosts() {
         <div class="post-header">
           <div class="post-user">
             <div class="post-avatar" data-username="${post.user}">${(post.user || 'A').charAt(0).toUpperCase()}</div>
-            <div><div class="user-name" data-username="${post.user}">${post.user}</div>
-            <div class="post-date">${new Date(post.created_at || Date.now()).toLocaleString()}</div></div>
+            <div>
+              <div class="user-name" data-username="${post.user}">${post.user}</div>
+              <div class="post-date">${new Date(post.created_at || Date.now()).toLocaleString()}</div>
+            </div>
           </div>
           ${(currentUser === post.user || isAdmin) ? `
           <div class="post-controls">
@@ -167,7 +169,7 @@ async function renderPosts() {
           <h3>${post.title || '(Sin título)'}</h3>
           <p>${(post.text || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</p>
           ${(post.imageBase64 || post.image) ? `<img src="${post.imageBase64 || post.image}" class="post-image" loading="lazy">` : ''}
-          ${betada ? `<p style="color:#ffb84d;font-size:0.9em;margin-top:8px;">⚠️ Contiene lenguaje inapropiado (solo autor/admin pueden verla).</p>` : ''}
+          ${betada ? `<p class="warning-text" style="color:#ffb84d;font-size:0.9em;margin-top:8px;">⚠️ Contiene lenguaje inapropiado.</p>` : ''}
         </div>
         <div class="post-actions">
           <button class="like-btn" data-post-id="${post._id}">❤️ ${post.likes || 0}</button>
@@ -177,17 +179,16 @@ async function renderPosts() {
     }).join('');
 
     attachPostHandlers();
-  } catch (err) {
+  } catch(err) {
     console.error(err);
     showAlert("❌ Error al cargar publicaciones", "error");
   } finally {
-    if (loader) loader.classList.add('hidden');  // ✅ solo si existe
+    if (loader) loader.classList.add('hidden');
   }
 }
 
-
 /* ---------------------------
-   HANDLERS
+   HANDLERS POSTS
 --------------------------- */
 function attachPostHandlers(){
   const container=document.getElementById('postsContainer');
@@ -197,40 +198,52 @@ function attachPostHandlers(){
   container.addEventListener('click',async e=>{
     const t=e.target;
 
-    // LIKE
+    /* LIKE */
     if(t.classList.contains('like-btn')){
       const postId=t.dataset.postId;
       if(!currentUser){showAlert("⚠️ Debes iniciar sesión","warn");return;}
-      const r=await fetch(`/api/posts/${postId}/like`,{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser})
-      });
-      const d=await r.json();
-      t.textContent=`❤️ ${d.likes||0}`;
-      socket.emit('postLiked', postId); // 🔥 evento en vivo
+      try {
+        const r=await fetch(`/api/posts/${postId}/like`,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({username:currentUser})
+        });
+        if(!r.ok){showAlert("❌ Error al dar like","error");return;}
+        const d=await r.json();
+        t.textContent=`❤️ ${d.likes||0}`;
+        socket.emit('postLiked', postId);
+      } catch(err){ console.error(err); showAlert("❌ Error al dar like","error"); }
       return;
     }
 
-    // PERFIL
-    const u=t.closest('.post-avatar,.user-name');
+    /* MINI-PERFILES */
+    const u = t.closest('.post-avatar,.user-name');
     if(u){
-      const username=u.dataset.username;
-      const r=await fetch(`/api/users/${encodeURIComponent(username)}`);
-      if(!r.ok){showAlert("❌ Usuario no encontrado","error");return;}
-      const userData=await r.json();
-      const avatar=userData.avatar?`<img src="${userData.avatar}" class="profile-avatar-img">`:`<div class="profile-avatar">${userData.username.charAt(0).toUpperCase()}</div>`;
-      showModal(`<div class="profile-card-horizontal">
-        ${avatar}
-        <div class="profile-info">
-          <h3>${userData.username}</h3>
-          <p>${userData.bio||'(Sin bio)'}</p>
-          <p>Publicaciones:${userData.postsCount||0}</p>
-          <p>Seguidores:${userData.followers||0}</p>
-        </div></div>`);
+      const username = u.dataset.username;
+      try {
+        const r = await fetch(`/api/profile/${encodeURIComponent(username)}`);
+        if(!r.ok){ showAlert("❌ Usuario no encontrado","error"); return; }
+        const userData = await r.json();
+
+        const avatarHTML = userData.avatarBase64
+          ? `<img src="${userData.avatarBase64}" class="profile-avatar-img">`
+          : `<div class="profile-avatar">${userData.username.charAt(0).toUpperCase()}</div>`;
+
+        showModal(`
+          <div class="profile-card-horizontal">
+            ${avatarHTML}
+            <div class="profile-info">
+              <h3>${userData.username}</h3>
+              <p>${userData.bio || '(Sin bio)'}</p>
+              <p>Publicaciones: ${userData.postsCount || 0}</p>
+              <p>Seguidores: ${userData.followers || 0}</p>
+            </div>
+          </div>
+        `);
+      } catch(err){ console.error(err); showAlert("❌ Error al cargar perfil","error"); }
       return;
     }
 
-    // POPUP
+    /* MÁS OPCIONES (EDITAR / ELIMINAR) */
     if(t.classList.contains('more-btn')){
       const postId=t.dataset.id;
       const popup=document.getElementById(`popup-${postId}`);
@@ -245,7 +258,7 @@ function attachPostHandlers(){
       return;
     }
 
-    // EDITAR
+    /* EDITAR PUBLICACIÓN */
     if(t.classList.contains('edit-post')){
       const id=t.dataset.id;
       const oldT=t.dataset.title||'', oldTxt=t.dataset.text||'';
@@ -258,10 +271,7 @@ function attachPostHandlers(){
         const newT=document.getElementById('editTitle').value.trim();
         const newTxt=document.getElementById('editText').value.trim();
         if(contieneInsultos(`${newT} ${newTxt}`)){showAlert("⚠️ No se permiten insultos.","error");return;}
-        await fetch(`/api/posts/${id}`,{
-          method:'PUT',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({title:newT,text:newTxt})
-        });
+        await fetch(`/api/posts/${id}`,{ method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title:newT,text:newTxt}) });
         const card=document.getElementById(`post-${id}`);
         if(card){
           card.querySelector('h3').textContent=newT||'(Sin título)';
@@ -270,13 +280,13 @@ function attachPostHandlers(){
         }
         closeModal();
         showAlert("✅ Publicación actualizada y desbloqueada","success");
-        socket.emit('postEdited', id); // 🔥 evento en vivo
+        socket.emit('postEdited', id);
       };
       document.getElementById('cancelEdit').onclick=closeModal;
       return;
     }
 
-    // ELIMINAR
+    /* ELIMINAR PUBLICACIÓN */
     if(t.classList.contains('delete-post')){
       const id=t.dataset.id;
       showModal(`<h3>Eliminar Publicación</h3><p>¿Estás seguro?</p>
@@ -287,13 +297,13 @@ function attachPostHandlers(){
         const c=document.getElementById(`post-${id}`);
         if(c)c.remove();
         closeModal();showAlert("✅ Publicación eliminada","success");
-        socket.emit('postDeleted', id); // 🔥 evento en vivo
+        socket.emit('postDeleted', id);
       };
       document.getElementById('cancelDelete').onclick=closeModal;
       return;
     }
 
-    // COMENTARIOS
+    /* COMENTARIOS */
     if(t.classList.contains('focus-comment')){
       const id=t.dataset.postId;
       const card=document.getElementById(`post-${id}`);
@@ -340,7 +350,7 @@ function attachPostHandlers(){
           btn.textContent=`💬 ${n+1}`;
           document.getElementById('newComment').value='';
           showAlert("✅ Comentario publicado","success");
-          socket.emit('commentAdded', id); // 🔥 evento en vivo
+          socket.emit('commentAdded', id);
         };
       }catch(err){console.error(err);showAlert("❌ Error cargando comentarios","error");}
     }
@@ -352,20 +362,21 @@ const sleepText=document.getElementById("sleepText");
 const zPhases=["Z...","Zz..","ZzZ.","ZzZz"];
 let i=0;
 setInterval(()=>{sleepText.textContent=zPhases[i];i=(i+1)%zPhases.length;},700);
-</script>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script>
 /* ---------------------------
    SOCKET.IO EN VIVO
 --------------------------- */
 const socket = io();
 
-// Actualizar post específico
-async function updatePostCard(postId){
-  const card=document.getElementById(`post-${postId}`);
-  if(!card) return; // 🚨 Protege si no existe
+socket.on('postLiked', updatePostCard);
+socket.on('commentAdded', updatePostCard);
+socket.on('postEdited', updatePostCard);
+socket.on('postDeleted', postId=>{ const card=document.getElementById(`post-${postId}`); if(card) card.remove(); });
+socket.on('postsUpdated',()=>{ if(document.getElementById('postsContainer')) renderPosts(); });
 
+async function updatePostCard(postId){
+  const card = document.getElementById(`post-${postId}`);
+  if(!card) return;
   try{
     const res = await fetch(`/api/posts/${postId}`);
     if(!res.ok) return;
@@ -374,49 +385,22 @@ async function updatePostCard(postId){
     const texto = `${post.title||''} ${post.text||''}`;
     const betada = contieneInsultos(texto);
     const currentUser = localStorage.getItem('username');
-    const isAdmin = currentUser === 'admin';
-
-    card.outerHTML = `<article class="post-card ${betada?'post-warn':''}" id="post-${post._id}">
-      <div class="post-header">
-        <div class="post-user">
-          <div class="post-avatar" data-username="${post.user}">${(post.user||'A').charAt(0).toUpperCase()}</div>
-          <div><div class="user-name" data-username="${post.user}">${post.user}</div>
-          <div class="post-date">${new Date(post.created_at||Date.now()).toLocaleString()}</div></div>
-        </div>
-        ${(currentUser===post.user||isAdmin)?`
-        <div class="post-controls">
-          <button class="more-btn" data-id="${post._id}">⋯</button>
-          <div class="popup-options" id="popup-${post._id}">
-            <button class="edit-post" data-id="${post._id}" data-title="${post.title||''}" data-text="${post.text||''}">Editar</button>
-            <button class="delete-post" data-id="${post._id}">Eliminar</button>
-          </div>
-        </div>`:''}
-      </div>
-      <div class="post-content">
-        <h3>${post.title||'(Sin título)'}</h3>
-        <p>${(post.text||'').replaceAll('<','&lt;').replaceAll('>','&gt;')}</p>
-        ${(post.imageBase64||post.image)?`<img src="${post.imageBase64||post.image}" class="post-image" loading="lazy">`:''}
-        ${betada?`<p style="color:#ffb84d;font-size:0.9em;margin-top:8px;">⚠️ Contiene lenguaje inapropiado (solo autor/admin pueden verla).</p>`:''}
-      </div>
-      <div class="post-actions">
-        <button class="like-btn" data-post-id="${post._id}">❤️ ${post.likes||0}</button>
-        <button class="focus-comment" data-post-id="${post._id}">💬 ${comments.length}</button>
-      </div>
-    </article>`;
-
-    attachPostHandlers();
-  }catch(err){ console.error(err); }
+    const isAdmin = currentUser==='admin';
+    card.querySelector('.post-actions .like-btn').textContent=`❤️ ${post.likes||0}`;
+    card.querySelector('.focus-comment').textContent=`💬 ${comments.length}`;
+    const pContent = card.querySelector('.post-content');
+    pContent.querySelector('h3').textContent=post.title||'(Sin título)';
+    pContent.querySelector('p').textContent=post.text||'';
+    if(post.imageBase64 || post.image){
+      let img = pContent.querySelector('img.post-image');
+      if(!img){
+        img = document.createElement('img'); img.className='post-image'; pContent.appendChild(img);
+      }
+      img.src=post.imageBase64||post.image;
+    }
+    card.classList.toggle('post-warn', betada && !(currentUser===post.user || isAdmin));
+  }catch(err){console.error(err);}
 }
-
-// Eventos socket
-socket.on('postLiked', updatePostCard);
-socket.on('commentAdded', updatePostCard);
-socket.on('postEdited', updatePostCard);
-socket.on('postDeleted', postId=>{
-  const card=document.getElementById(`post-${postId}`);
-  if(card) card.remove();
-});
-socket.on('postsUpdated',()=>{ if(document.getElementById('postsContainer')) renderPosts(); });
 </script>
 </body>
 </html>

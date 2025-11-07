@@ -3,60 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Editar Perfil</title>
-  <link rel="stylesheet" href="styles.css"> <!-- Tu CSS de index.html -->
+  <title>Editar Perfil - Souls Social</title>
+  <link rel="stylesheet" href="styles.css?v=20251107">
   <style>
-    /* Contenedor central tipo card */
+    /* ==================== CONTENEDOR PERFIL ==================== */
     .profile-container {
-      max-width: 400px;
-      margin: 80px auto;
+      max-width: 480px;
+      margin: calc(var(--nav-height) + 40px) auto 40px;
       background: linear-gradient(145deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      padding: 20px;
+      padding: 25px 30px;
       border-radius: var(--card-radius);
       box-shadow: var(--elev-shadow);
-      border:1px solid var(--accent-2);
+      border: 1px solid var(--accent-2);
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 18px;
+    }
+
+    .profile-container h2 {
+      text-align: center;
+      color: var(--accent-2);
+      margin: 0;
+      font-size: 1.6rem;
     }
 
     .profile-container img {
-      width: 100px;
-      height: 100px;
+      width: 120px;
+      height: 120px;
       border-radius: 50%;
       object-fit: cover;
       align-self: center;
-      border: 2px solid var(--accent-2);
+      border: 3px solid var(--accent-2);
+      transition: all 0.3s ease;
+    }
+    .profile-container img:hover {
+      border-color: var(--accent-1);
+      transform: scale(1.05);
     }
 
-    .profile-container input, .profile-container textarea, .profile-container select, .profile-container button {
+    .profile-container input,
+    .profile-container textarea,
+    .profile-container select,
+    .profile-container button {
       width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border:1px solid #333;
-      background: #081430;
+      padding: 12px;
+      border-radius: var(--card-radius);
+      border: 1px solid #333;
+      background: var(--bg-2);
       color: #e7f6ff;
       font-size: 1rem;
       outline: none;
       transition: all var(--transition);
     }
-
     .profile-container input:focus,
     .profile-container textarea:focus,
     .profile-container select:focus {
-      box-shadow: 0 0 10px var(--accent-2);
+      box-shadow: 0 0 12px var(--accent-2);
       border-color: var(--accent-2);
     }
-
     .profile-container button {
       background: var(--accent-2);
       border: none;
       color: #fff;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.3s ease;
     }
-
     .profile-container button:hover {
       background: var(--accent-1);
       transform: scale(1.05);
@@ -64,11 +75,20 @@
   </style>
 </head>
 <body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <div class="nav-left">
+      <a href="index.html">Souls Social</a>
+    </div>
+  </nav>
+
+  <!-- PERFIL -->
   <div class="profile-container">
-    <h2 style="text-align:center; color: var(--accent-2);">Editar Perfil</h2>
-    <img id="avatarPreview" src="https://via.placeholder.com/100" alt="Avatar">
+    <h2>Editar Perfil</h2>
+    <img id="avatarPreview" src="https://via.placeholder.com/120" alt="Avatar">
     <form id="profileForm">
-      <input type="text" id="username" placeholder="Nombre de usuario" required>
+      <input type="text" id="username" placeholder="Nombre de usuario" disabled>
       <textarea id="bio" placeholder="Descripción / Bio" rows="3"></textarea>
       <select id="language">
         <option value="es">Español</option>
@@ -80,11 +100,10 @@
   </div>
 
   <script>
-    // Tomar el usuario logueado desde index.html (localStorage)
     const usernameLogged = localStorage.getItem('username');
-    if (!usernameLogged) {
-      alert('No hay usuario logueado');
-      window.location.href = 'login.html';
+    if (!usernameLogged) { 
+      alert('No hay usuario logueado'); 
+      window.location.href = 'login.html'; 
     }
 
     const usernameInput = document.getElementById('username');
@@ -93,57 +112,42 @@
     const avatarInput = document.getElementById('avatar');
     const avatarPreview = document.getElementById('avatarPreview');
     const form = document.getElementById('profileForm');
+    const apiBase = '/api/profile';
 
-    const userId = usernameLogged;
-
-    // Cargar perfil del usuario logueado
     async function loadProfile() {
       try {
-        const res = await fetch(`http://localhost:3000/api/profile/${userId}`);
+        const res = await fetch(`${apiBase}/${encodeURIComponent(usernameLogged)}`);
         if (!res.ok) throw new Error('No se pudo cargar el perfil');
         const user = await res.json();
-
         usernameInput.value = user.username || '';
         bioInput.value = user.bio || '';
         languageSelect.value = user.language || 'es';
-        avatarPreview.src = user.avatar || 'https://via.placeholder.com/100';
-      } catch (err) {
-        alert(err.message);
-      }
+        avatarPreview.src = user.avatar || 'https://via.placeholder.com/120';
+      } catch (err) { alert(err.message); }
     }
 
-    // Preview del avatar al seleccionar
     avatarInput.addEventListener('change', () => {
       const file = avatarInput.files[0];
       if (file) avatarPreview.src = URL.createObjectURL(file);
     });
 
-    // Guardar cambios
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
       const formData = new FormData();
-      formData.append('username', usernameInput.value);
       formData.append('bio', bioInput.value);
       formData.append('language', languageSelect.value);
       if (avatarInput.files[0]) formData.append('avatar', avatarInput.files[0]);
 
       try {
-        const res = await fetch(`http://localhost:3000/api/profile/${userId}`, {
-          method: 'PUT',
-          body: formData
+        const res = await fetch(`${apiBase}/${encodeURIComponent(usernameLogged)}`, {
+          method: 'PUT', body: formData
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Error al actualizar perfil');
-
         alert('Perfil actualizado correctamente');
-        // Actualizar localStorage en caso de que cambie el username
-        localStorage.setItem('username', usernameInput.value);
-      } catch (err) {
-        alert(err.message);
-      }
+      } catch (err) { alert(err.message); }
     });
 
-    // Inicializar
     loadProfile();
   </script>
 </body>

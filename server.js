@@ -14,7 +14,6 @@ import { Server } from 'socket.io';
 
 dotenv.config();
 
-// Simula __dirname y __filename en ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -24,8 +23,6 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(compression());
-
-// Evita que cualquier respuesta se guarde en caché
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.setHeader('Pragma', 'no-cache');
@@ -33,16 +30,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Servir archivos estáticos sin caché
-app.use(express.static(path.join(__dirname, 'public'), {
-  etag: false,
-  lastModified: false,
-  maxAge: 0,
-  cacheControl: false
-}));
+app.use(express.static(path.join(__dirname, 'public'), { etag: false, lastModified: false, maxAge: 0, cacheControl: false }));
 
 // === CONEXIÓN A MONGODB ===
-// Use MONGO_URI from env or fallback to local
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/infordle';
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Conectado a MongoDB'))
@@ -50,11 +40,12 @@ mongoose.connect(MONGO_URI)
 
 // === MODELOS ===
 const userSchema = new mongoose.Schema({
-  username: String,
-  email: String,
+  username: { type: String, unique: true },
+  email: { type: String, unique: true },
   password: String,
   bio: String,
-  avatar: String
+  avatarBase64: String, // <-- Cambio: avatar en Base64
+  language: { type: String, default: 'es' }
 });
 const User = mongoose.model('User', userSchema);
 
@@ -78,40 +69,34 @@ const commentSchema = new mongoose.Schema({
 });
 const Comment = mongoose.model('Comment', commentSchema);
 
-// === CONFIG MULTER ===
-const uploadDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + file.originalname.replace(/\s+/g, '_');
-    cb(null, uniqueName);
-  }
-});
+// === CONFIG MULTER (temporal para recibir archivo) ===
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // === HTTP SERVER + SOCKET.IO ===
 const server = createServer(app);
-const io = new Server(server, {
-  // Ajustá el origen si querés restringir
-  cors: { origin: '*' }
-});
+const io = new Server(server, { cors: { origin: '*' } });
 
-io.on('connection', (socket) => {
+io.on('connection', socket => {
   console.log('🟢 Cliente conectado');
   socket.on('disconnect', () => console.log('🔴 Cliente desconectado'));
 });
 
 // === RUTAS DE USUARIOS ===
-app.post('/api/users/register', async (req, res) => {
+app.post('/api/users/register', upload.single('avatar'), async (req, res) => {
   try {
     const { username, email, password } = req.body;
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: 'Correo ya registrado' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ username, email, password: hashedPassword });
+
+    let avatarBase64 = '';
+    if (req.file) {
+      avatarBase64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    }
+
+    const user = new User({ username, email, password: hashedPassword, avatarBase64 });
     await user.save();
     res.status(201).json({ username });
   } catch (err) {
@@ -129,53 +114,64 @@ app.post('/api/users/login', async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ message: 'Email o contraseña incorrectos' });
 
-    res.json({ username: user.username });
+    res.json({ username: user.username, avatarBase64: user.avatarBase64 });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error en login' });
   }
 });
 
-app.get('/api/users/:username', async (req, res) => {
+// === PERFIL ===
+app.get('/api/profile/:username', async (req, res) => {
   try {
-    const username = req.params.username;
-    const user = await User.findOne({ username }).lean();
+    const user = await User.findOne({ username: req.params.username }).lean();
     if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
 
-    const postsCount = await Post.countDocuments({ user: username });
     res.json({
       username: user.username,
       bio: user.bio || '',
-      avatar: user.avatar || '',
-      postsCount,
-      followers: 0
+      avatarBase64: user.avatarBase64 || '',
+      language: user.language || 'es'
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Error al obtener usuario' });
+    res.status(500).json({ message: 'Error al obtener perfil' });
   }
 });
 
-// === RUTAS DE POSTS ===
+app.put('/api/profile/:username', upload.single('avatar'), async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username });
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    const { bio, language } = req.body;
+    if (bio !== undefined) user.bio = bio;
+    if (language !== undefined) user.language = language;
+
+    if (req.file) {
+      user.avatarBase64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    }
+
+    await user.save();
+    io.emit('postsUpdated');
+    res.json({ message: 'Perfil actualizado correctamente' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error al actualizar perfil' });
+  }
+});
+
+// === POST, LIKE, COMMENT, EDIT, DELETE ===
 app.post('/api/posts', upload.single('image'), async (req, res) => {
   try {
     const { title, text, username } = req.body;
     let imageBase64 = null;
-
     if (req.file) {
-      const imgPath = path.join(uploadDir, req.file.filename);
-      const mimeType = req.file.mimetype;
-      const imgData = fs.readFileSync(imgPath, { encoding: 'base64' });
-      imageBase64 = `data:${mimeType};base64,${imgData}`;
-      fs.unlinkSync(imgPath); // elimina archivo físico
+      imageBase64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
     }
-
     const post = new Post({ user: username || 'Anónimo', title, text, image: null, imageBase64 });
     await post.save();
-
-    // Emitir actualización a todos los clientes conectados
     io.emit('postsUpdated');
-
     res.status(201).json({ message: 'Publicación creada correctamente' });
   } catch (err) {
     console.error(err);
@@ -187,7 +183,6 @@ app.get('/api/posts', async (req, res) => {
   try {
     const posts = await Post.find().sort({ created_at: -1 }).lean();
     const comments = await Comment.find().lean();
-
     const postsWithComments = posts.map(post => ({
       ...post,
       comments: comments.filter(c => c.post_id && c.post_id.toString() === post._id.toString())
@@ -215,10 +210,7 @@ app.post('/api/posts/:id/like', async (req, res) => {
       post.likedBy = post.likedBy.filter(u => u !== username);
     }
     await post.save();
-
-    // Emitir actualización
     io.emit('postsUpdated');
-
     res.json({ likes: post.likes });
   } catch (err) {
     console.error(err);
@@ -231,10 +223,7 @@ app.post('/api/posts/:id/comment', async (req, res) => {
     const { user, text } = req.body;
     const comment = new Comment({ post_id: req.params.id, user, text });
     await comment.save();
-
-    // Emitir actualización
     io.emit('postsUpdated');
-
     res.json({ message: 'Comentario agregado' });
   } catch (err) {
     console.error(err);
@@ -246,10 +235,7 @@ app.put('/api/posts/:id', async (req, res) => {
   try {
     const { title, text } = req.body;
     await Post.findByIdAndUpdate(req.params.id, { title, text });
-
-    // Emitir actualización
     io.emit('postsUpdated');
-
     res.json({ message: 'Publicación actualizada correctamente' });
   } catch (err) {
     console.error(err);
@@ -262,10 +248,7 @@ app.delete('/api/posts/:id', async (req, res) => {
     const postId = req.params.id;
     await Post.findByIdAndDelete(postId);
     await Comment.deleteMany({ post_id: postId });
-
-    // Emitir actualización
     io.emit('postsUpdated');
-
     res.json({ message: 'Publicación y comentarios eliminados correctamente' });
   } catch (err) {
     console.error(err);
@@ -290,14 +273,12 @@ app.get('/api/posts/:id', async (req, res) => {
   }
 });
 
-// Servir index.html para rutas no API (SPA)
+// Servir SPA
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-
-
-
 // === INICIO SERVIDOR ===
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
+
