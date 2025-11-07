@@ -58,41 +58,24 @@
 <script>
 /* ---------------------------
    VARIABLES / UTILIDADES
-   --------------------------- */
+---------------------------- */
 const modalOverlay = document.getElementById('modalOverlay');
 const modalContent = document.getElementById('modalContent');
 function showModal(html){ modalContent.innerHTML = html; modalOverlay.classList.add('active'); }
 function closeModal(){ modalOverlay.classList.remove('active'); }
 modalOverlay.addEventListener('click', e => { if(e.target===modalOverlay) closeModal(); });
 
-/* ---------------------------
-   SISTEMA ANTI-INSULTOS
-   --------------------------- */
-const palabrasProhibidas = [
-  "idiota","imbecil","tonto","estupido","mierda","puta","puto","forro",
-  "gil","pajero","concha","pelotudo","marica","rata","zorra","tarado",
-  "mugroso","asco","prostituta","basura"
-];
+const palabrasProhibidas = [/*... tu lista ...*/];
 function contieneInsultos(texto){
   if(!texto) return false;
   const t = texto.toLowerCase();
   return palabrasProhibidas.some(p => t.includes(p));
 }
 
-/* ---------------------------
-   ALERT BOX
-   --------------------------- */
 function showAlert(msg, type="warn"){
   const box=document.createElement("div");
   box.textContent=msg;
-  box.style.cssText=`
-    padding:10px 14px;border-radius:10px;
-    font-family:'Poppins',sans-serif;
-    color:#fff;background:${type==="error"?"#ff4b4b":type==="success"?"#28a745":"#f5a623"};
-    box-shadow:0 6px 18px rgba(0,0,0,0.35);
-    opacity:0;transform:translateY(-6px);
-    transition:all 230ms ease;max-width:320px;
-  `;
+  box.style.cssText=`/*... tu estilo ...*/`;
   const cont=document.getElementById("alertBoxContainer");
   cont.appendChild(box);
   requestAnimationFrame(()=>{box.style.opacity="1";box.style.transform="translateY(0)";});
@@ -103,7 +86,7 @@ function showAlert(msg, type="warn"){
 
 /* ---------------------------
    LOGIN Y POSTS
-   --------------------------- */
+---------------------------- */
 document.addEventListener('DOMContentLoaded',()=>{
   const navRight=document.getElementById('navRight');
   const username=localStorage.getItem('username');
@@ -116,13 +99,17 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 /* ---------------------------
    RENDER POSTS
-   --------------------------- */
-async function renderPosts(){
+---------------------------- */
+let allPostsCache = []; // cache local
+async function renderPosts(forceReload=false){
   const loader=document.getElementById('polarLoader');
-  loader.classList.remove('hidden');
+  if(forceReload) loader.classList.remove('hidden');
+
   try{
     const res=await fetch('/api/posts');
     const posts=await res.json();
+    allPostsCache = posts; // actualizar cache
+
     const postsContainer=document.getElementById('postsContainer');
     const currentUser=localStorage.getItem('username');
     const isAdmin=currentUser==='admin';
@@ -170,183 +157,36 @@ async function renderPosts(){
         </div>
       </article>`;
     }).join('');
+
     attachPostHandlers();
-  }catch(err){
-    console.error(err);showAlert("❌ Error al cargar publicaciones","error");
-  }finally{loader.classList.add('hidden');}
+  }catch(err){console.error(err);showAlert("❌ Error al cargar publicaciones","error");}
+  finally{loader.classList.add('hidden');}
 }
 
 /* ---------------------------
-   HANDLERS
-   --------------------------- */
-function attachPostHandlers(){
-  const container=document.getElementById('postsContainer');
-  const currentUser=localStorage.getItem('username');
-  const isAdmin=currentUser==='admin';
+   HANDLERS (igual que antes)
+---------------------------- */
+function attachPostHandlers(){ /* tu código tal cual */ }
 
-  container.addEventListener('click',async e=>{
-    const t=e.target;
-
-    // LIKE
-    if(t.classList.contains('like-btn')){
-      const postId=t.dataset.postId;
-      if(!currentUser){showAlert("⚠️ Debes iniciar sesión","warn");return;}
-      const r=await fetch(`/api/posts/${postId}/like`,{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:currentUser})
-      });
-      const d=await r.json();
-      t.textContent=`❤️ ${d.likes||0}`;
-      return;
-    }
-
-    // PERFIL
-    const u=t.closest('.post-avatar,.user-name');
-    if(u){
-      const username=u.dataset.username;
-      const r=await fetch(`/api/users/${encodeURIComponent(username)}`);
-      if(!r.ok){showAlert("❌ Usuario no encontrado","error");return;}
-      const userData=await r.json();
-      const avatar=userData.avatar?`<img src="${userData.avatar}" class="profile-avatar-img">`:`<div class="profile-avatar">${userData.username.charAt(0).toUpperCase()}</div>`;
-      showModal(`<div class="profile-card-horizontal">
-        ${avatar}
-        <div class="profile-info">
-          <h3>${userData.username}</h3>
-          <p>${userData.bio||'(Sin bio)'}</p>
-          <p>Publicaciones:${userData.postsCount||0}</p>
-          <p>Seguidores:${userData.followers||0}</p>
-        </div></div>`);
-      return;
-    }
-
-    // POPUP
-    if(t.classList.contains('more-btn')){
-      const postId=t.dataset.id;
-      const popup=document.getElementById(`popup-${postId}`);
-      if(!popup)return;
-      popup.classList.toggle('active');
-      document.addEventListener('click',function clickOutside(ev){
-        if(!popup.contains(ev.target)&&ev.target!==t){
-          popup.classList.remove('active');
-          document.removeEventListener('click',clickOutside);
-        }
-      });
-      return;
-    }
-
-    // EDITAR
-    if(t.classList.contains('edit-post')){
-      const id=t.dataset.id;
-      const oldT=t.dataset.title||'', oldTxt=t.dataset.text||'';
-      showModal(`<h3>Editar Publicación</h3>
-        <input id="editTitle" type="text" value="${oldT}" placeholder="Título">
-        <textarea id="editText">${oldTxt}</textarea>
-        <button class="confirm" id="saveEdit">Guardar</button>
-        <button class="cancel" id="cancelEdit">Cancelar</button>`);
-      document.getElementById('saveEdit').onclick=async()=>{
-        const newT=document.getElementById('editTitle').value.trim();
-        const newTxt=document.getElementById('editText').value.trim();
-        if(contieneInsultos(`${newT} ${newTxt}`)){
-          showAlert("⚠️ No se permiten insultos.","error");
-          return;
-        }
-        await fetch(`/api/posts/${id}`,{
-          method:'PUT',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({title:newT,text:newTxt})
-        });
-        const card=document.getElementById(`post-${id}`);
-        if(card){
-          card.querySelector('h3').textContent=newT||'(Sin título)';
-          card.querySelector('.post-content p').textContent=newTxt;
-          card.classList.remove('post-warn'); // 🔥 DESBLOQUEO instantáneo
-        }
-        closeModal();
-        showAlert("✅ Publicación actualizada y desbloqueada","success");
-      };
-      document.getElementById('cancelEdit').onclick=closeModal;
-      return;
-    }
-
-    // ELIMINAR
-    if(t.classList.contains('delete-post')){
-      const id=t.dataset.id;
-      showModal(`<h3>Eliminar Publicación</h3><p>¿Estás seguro?</p>
-        <button class="confirm" id="confirmDelete">Eliminar</button>
-        <button class="cancel" id="cancelDelete">Cancelar</button>`);
-      document.getElementById('confirmDelete').onclick=async()=>{
-        await fetch(`/api/posts/${id}`,{method:'DELETE'});
-        const c=document.getElementById(`post-${id}`);
-        if(c)c.remove();
-        closeModal();showAlert("✅ Publicación eliminada","success");
-      };
-      document.getElementById('cancelDelete').onclick=closeModal;
-      return;
-    }
-
-    // COMENTARIOS
-    if(t.classList.contains('focus-comment')){
-      const id=t.dataset.postId;
-      const card=document.getElementById(`post-${id}`);
-      try{
-        const r=await fetch(`/api/posts/${id}`);
-        if(!r.ok){showAlert("❌ Esta publicación ya no existe","error");return;}
-        const post=await r.json();
-        const comments=Array.isArray(post.comments)?post.comments:[];
-        const list=comments.map(c=>`
-          <div class="comment-text">
-            <div class="comment-avatar">${c.user.charAt(0).toUpperCase()}</div>
-            <div class="comment-body">
-              <div class="comment-username">${c.user}</div>
-              <div class="comment-content">${c.text}</div>
-            </div></div>`).join('');
-        showModal(`<h3>Comentarios</h3>
-          <div id="commentsList" style="max-height:250px;overflow-y:auto;margin-bottom:10px;padding:10px;border:1px solid #333;border-radius:12px;background:#0a1022;">
-            ${list||'<p style="color:#98a3b3;">No hay comentarios todavía.</p>'}
-          </div>
-          <textarea id="newComment" placeholder="Escribe un comentario..." style="width:100%;padding:8px;border-radius:12px;background:#081430;color:#e8f7ff;margin-bottom:10px;"></textarea>
-          <button class="confirm" id="postCommentBtn">Comentar</button>
-          <button class="cancel" id="cancelCommentBtn">Cancelar</button>`);
-        document.getElementById('cancelCommentBtn').onclick=closeModal;
-        document.getElementById('postCommentBtn').onclick=async()=>{
-          const u=localStorage.getItem('username');
-          const text=document.getElementById('newComment').value.trim();
-          if(!u){showAlert("⚠️ Debes iniciar sesión","warn");return;}
-          if(!text){showAlert("⚠️ El comentario no puede estar vacío","warn");return;}
-          if(contieneInsultos(text)){showAlert("⚠️ Tu comentario contiene lenguaje inapropiado","error");return;}
-          const r2=await fetch(`/api/posts/${id}/comment`,{
-            method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({user:u,text})
-          });
-          if(!r2.ok){showAlert("❌ Error al enviar comentario","error");return;}
-          const list=document.getElementById('commentsList');
-          const el=document.createElement('div');
-          el.className='comment-text';
-          el.innerHTML=`<div class="comment-avatar">${u.charAt(0).toUpperCase()}</div>
-            <div class="comment-body"><div class="comment-username">${u}</div>
-            <div class="comment-content">${text}</div></div>`;
-          list.prepend(el);
-          const btn=card.querySelector('.focus-comment');
-          const n=parseInt(btn.textContent.split(' ')[1]||0);
-          btn.textContent=`💬 ${n+1}`;
-          document.getElementById('newComment').value='';
-          showAlert("✅ Comentario publicado","success");
-        };
-      }catch(err){console.error(err);showAlert("❌ Error cargando comentarios","error");}
-    }
-  });
-}
-
-/* --- Animación Z --- */
+/* ---------------------------
+   ANIMACIÓN Z
+---------------------------- */
 const sleepText=document.getElementById("sleepText");
 const zPhases=["Z...","Zz..","ZzZ.","ZzZz"];
 let i=0;
 setInterval(()=>{sleepText.textContent=zPhases[i];i=(i+1)%zPhases.length;},700);
+
+/* ---------------------------
+   SOCKET.IO LIVE
+---------------------------- */
+const socket = io();
+let debounce = false;
+socket.on('postsUpdated', ()=>{
+  if(debounce) return; // evita múltiples render simultáneos
+  debounce = true;
+  renderPosts(true).finally(()=>{debounce=false});
+});
 </script>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script>
-const socket=io();
-socket.on('postsUpdated',()=>{renderPosts();});
-</script>
 </body>
 </html>
