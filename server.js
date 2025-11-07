@@ -33,10 +33,16 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public'), { etag: false, lastModified: false, maxAge: 0, cacheControl: false }));
 
 
+
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/infordle';
-mongoose.connect(MONGO_URI)
-  .then(() => console.log('Conectado a MongoDB'))
-  .catch(err => console.error('Error al conectar con MongoDB:', err));
+
+mongoose.connect(MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+})
+.then(() => console.log('✅ Conectado a MongoDB'))
+.catch(err => console.error('❌ Error al conectar con MongoDB:', err));
 
 const userSchema = new mongoose.Schema({
   username: { type: String, unique: true },
