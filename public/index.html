@@ -12,7 +12,7 @@
 </head>
 <body>
 <nav>
-  <div class="nav-left"><a href="index.html">🔷SoulsSocial</a></div>
+  <div class="nav-left"><a href="perfil.html">🔷SoulsSocial</a></div>
   <div class="nav-right" id="navRight"></div>
 </nav>
 
@@ -116,64 +116,75 @@ document.addEventListener('DOMContentLoaded',()=>{
 /* ---------------------------
    RENDER POSTS
 --------------------------- */
-async function renderPosts(){
-  const loader=document.getElementById('polarLoader');
-  loader.classList.remove('hidden');
-  try{
-    const res=await fetch('/api/posts');
-    const posts=await res.json();
-    const postsContainer=document.getElementById('postsContainer');
-    const currentUser=localStorage.getItem('username');
-    const isAdmin=currentUser==='admin';
+async function renderPosts() {
+  const loader = document.getElementById('polarLoader');
+  const postsContainer = document.getElementById('postsContainer');
 
-    if(!posts.length){
-      postsContainer.innerHTML='<div class="center-empty card">No hay publicaciones todavía.</div>';
-      loader.classList.add('hidden');return;
+  if (loader) loader.classList.remove('hidden');  // ✅ solo si existe
+  if (!postsContainer) return;                     // 🚨 protege si no existe
+
+  try {
+    const res = await fetch('/api/posts');
+    const posts = await res.json();
+    const currentUser = localStorage.getItem('username');
+    const isAdmin = currentUser === 'admin';
+
+    if (!posts.length) {
+      postsContainer.innerHTML = '<div class="center-empty card">No hay publicaciones todavía.</div>';
+      if (loader) loader.classList.add('hidden');
+      return;
     }
 
-    postsContainer.innerHTML=posts.map(post=>{
-      const comments=post.comments||[];
-      const texto=`${post.title||''} ${post.text||''}`;
-      const betada=contieneInsultos(texto);
-      if(betada && !(currentUser===post.user||isAdmin)){
+    postsContainer.innerHTML = posts.map(post => {
+      const comments = post.comments || [];
+      const texto = `${post.title || ''} ${post.text || ''}`;
+      const betada = contieneInsultos(texto);
+
+      if (betada && !(currentUser === post.user || isAdmin)) {
         return `<article class="post-card betada">
           <h3>Publicación Betada 🚫</h3>
           <p>Esta publicación ha sido ocultada por uso de lenguaje inapropiado.</p>
         </article>`;
       }
-      return `<article class="post-card ${betada?'post-warn':''}" id="post-${post._id}">
+
+      return `<article class="post-card ${betada ? 'post-warn' : ''}" id="post-${post._id}">
         <div class="post-header">
           <div class="post-user">
-            <div class="post-avatar" data-username="${post.user}">${(post.user||'A').charAt(0).toUpperCase()}</div>
+            <div class="post-avatar" data-username="${post.user}">${(post.user || 'A').charAt(0).toUpperCase()}</div>
             <div><div class="user-name" data-username="${post.user}">${post.user}</div>
-            <div class="post-date">${new Date(post.created_at||Date.now()).toLocaleString()}</div></div>
+            <div class="post-date">${new Date(post.created_at || Date.now()).toLocaleString()}</div></div>
           </div>
-          ${(currentUser===post.user||isAdmin)?`
+          ${(currentUser === post.user || isAdmin) ? `
           <div class="post-controls">
             <button class="more-btn" data-id="${post._id}">⋯</button>
             <div class="popup-options" id="popup-${post._id}">
-              <button class="edit-post" data-id="${post._id}" data-title="${post.title||''}" data-text="${post.text||''}">Editar</button>
+              <button class="edit-post" data-id="${post._id}" data-title="${post.title || ''}" data-text="${post.text || ''}">Editar</button>
               <button class="delete-post" data-id="${post._id}">Eliminar</button>
             </div>
-          </div>`:''}
+          </div>` : ''}
         </div>
         <div class="post-content">
-          <h3>${post.title||'(Sin título)'}</h3>
-          <p>${(post.text||'').replaceAll('<','&lt;').replaceAll('>','&gt;')}</p>
-          ${(post.imageBase64||post.image)?`<img src="${post.imageBase64||post.image}" class="post-image" loading="lazy">`:''}
-          ${betada?`<p style="color:#ffb84d;font-size:0.9em;margin-top:8px;">⚠️ Contiene lenguaje inapropiado (solo autor/admin pueden verla).</p>`:''}
+          <h3>${post.title || '(Sin título)'}</h3>
+          <p>${(post.text || '').replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</p>
+          ${(post.imageBase64 || post.image) ? `<img src="${post.imageBase64 || post.image}" class="post-image" loading="lazy">` : ''}
+          ${betada ? `<p style="color:#ffb84d;font-size:0.9em;margin-top:8px;">⚠️ Contiene lenguaje inapropiado (solo autor/admin pueden verla).</p>` : ''}
         </div>
         <div class="post-actions">
-          <button class="like-btn" data-post-id="${post._id}">❤️ ${post.likes||0}</button>
+          <button class="like-btn" data-post-id="${post._id}">❤️ ${post.likes || 0}</button>
           <button class="focus-comment" data-post-id="${post._id}">💬 ${comments.length}</button>
         </div>
       </article>`;
     }).join('');
+
     attachPostHandlers();
-  }catch(err){
-    console.error(err);showAlert("❌ Error al cargar publicaciones","error");
-  }finally{loader.classList.add('hidden');}
+  } catch (err) {
+    console.error(err);
+    showAlert("❌ Error al cargar publicaciones", "error");
+  } finally {
+    if (loader) loader.classList.add('hidden');  // ✅ solo si existe
+  }
 }
+
 
 /* ---------------------------
    HANDLERS
@@ -346,26 +357,25 @@ setInterval(()=>{sleepText.textContent=zPhases[i];i=(i+1)%zPhases.length;},700);
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
 /* ---------------------------
-   SOCKET.IO EN VIVO OPTIMIZADO
+   SOCKET.IO EN VIVO
 --------------------------- */
 const socket = io();
-  
-// Función para re-renderizar un post específico
+
+// Actualizar post específico
 async function updatePostCard(postId){
-  try {
+  const card=document.getElementById(`post-${postId}`);
+  if(!card) return; // 🚨 Protege si no existe
+
+  try{
     const res = await fetch(`/api/posts/${postId}`);
     if(!res.ok) return;
     const post = await res.json();
-    const card = document.getElementById(`post-${postId}`);
-    if(!card) return;
-
     const comments = post.comments || [];
     const texto = `${post.title||''} ${post.text||''}`;
     const betada = contieneInsultos(texto);
     const currentUser = localStorage.getItem('username');
     const isAdmin = currentUser === 'admin';
 
-    // Re-render del HTML completo del artículo
     card.outerHTML = `<article class="post-card ${betada?'post-warn':''}" id="post-${post._id}">
       <div class="post-header">
         <div class="post-user">
@@ -394,27 +404,19 @@ async function updatePostCard(postId){
       </div>
     </article>`;
 
-    attachPostHandlers(); // re-attach handlers
-  } catch(err) { console.error(err); }
+    attachPostHandlers();
+  }catch(err){ console.error(err); }
 }
 
-// Likes en vivo
-socket.on('postLiked', postId => { updatePostCard(postId); });
-
-// Comentarios en vivo
-socket.on('commentAdded', postId => { updatePostCard(postId); });
-
-// Post editado
-socket.on('postEdited', postId => { updatePostCard(postId); });
-
-// Post eliminado
-socket.on('postDeleted', postId => {
-  const card = document.getElementById(`post-${postId}`);
+// Eventos socket
+socket.on('postLiked', updatePostCard);
+socket.on('commentAdded', updatePostCard);
+socket.on('postEdited', updatePostCard);
+socket.on('postDeleted', postId=>{
+  const card=document.getElementById(`post-${postId}`);
   if(card) card.remove();
 });
-
-// Recarga completa si hay cambios masivos
-socket.on('postsUpdated', () => { renderPosts(); });
+socket.on('postsUpdated',()=>{ if(document.getElementById('postsContainer')) renderPosts(); });
 </script>
 </body>
 </html>
