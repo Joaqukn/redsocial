@@ -16,6 +16,8 @@
   <div class="nav-right" id="navRight"></div>
 </nav>
 
+<button id="langButton">EN</button>
+
 <main class="main-section">
   <a href="create.html" class="create-btn">Publicar 👻</a>
   <section id="postsContainer" class="posts-container">
@@ -59,7 +61,7 @@
 <script>
 
 // -----------------------------
-// SISTEMA DE IDIOMAS
+// 🔸 SISTEMA DE IDIOMAS MANUAL CON BOTÓN EN BODY
 // -----------------------------
 const translations = {
   es: {
@@ -67,61 +69,49 @@ const translations = {
     loadingText: "Cargando publicaciones...",
     login: "Iniciar sesión",
     logout: "Cerrar sesión",
-    noPosts: "No hay publicaciones todavía.",
-    mustLogin: "⚠️ Debes iniciar sesión",
-    commentPlaceholder: "Escribe un comentario...",
-    commentEmpty: "⚠️ El comentario no puede estar vacío",
+    noPosts: "No hay publicaciones todavía."
   },
   en: {
     createBtn: "Post 👻",
     loadingText: "Loading posts...",
     login: "Log in",
     logout: "Log out",
-    noPosts: "No posts yet.",
-    mustLogin: "⚠️ You must log in",
-    commentPlaceholder: "Write a comment...",
-    commentEmpty: "⚠️ Comment cannot be empty",
+    noPosts: "No posts yet."
   }
 };
 
 function applyTranslations(lang) {
   document.querySelectorAll("[data-i18n]").forEach(el => {
     const key = el.dataset.i18n;
-    if (translations[lang][key]) {
-      el.textContent = translations[lang][key];
-    }
+    if (translations[lang][key]) el.textContent = translations[lang][key];
   });
-  // Cambiar botón nav
-  const username = localStorage.getItem('username');
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("langButton");
+  let lang = localStorage.getItem("lang") || "es";
+  applyTranslations(lang);
+  btn.textContent = lang === "es" ? "EN" : "ES";
+
+  btn.onclick = () => {
+    lang = lang === "es" ? "en" : "es";
+    localStorage.setItem("lang", lang);
+    applyTranslations(lang);
+    btn.textContent = lang === "es" ? "EN" : "ES";
+  };
+
   const navRight = document.getElementById('navRight');
+  const username = localStorage.getItem('username');
   if (username) {
-    navRight.innerHTML = `
-      <span>👤 ${username}</span>
-      <button id="logoutBtn">${translations[lang].logout}</button>
-      <button id="langToggle">${lang === 'es' ? 'EN' : 'ES'}</button>
-    `;
+    navRight.innerHTML = `<span>👤 ${username}</span><button id="logoutBtn">${translations[lang].logout}</button>`;
+    document.getElementById('logoutBtn').onclick = () => {
+      localStorage.clear();
+      location.href = 'login.html';
+    };
   } else {
-    navRight.innerHTML = `
-      <a href="login.html" data-i18n="login">${translations[lang].login}</a>
-      <button id="langToggle">${lang === 'es' ? 'EN' : 'ES'}</button>
-    `;
+    navRight.innerHTML = `<a href="login.html" data-i18n="login">${translations[lang].login}</a>`;
   }
 
-  document.getElementById('langToggle').onclick = toggleLang;
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) logoutBtn.onclick = () => { localStorage.clear(); location.href='login.html'; };
-}
-
-function toggleLang() {
-  const current = localStorage.getItem('lang') || 'es';
-  const next = current === 'es' ? 'en' : 'es';
-  localStorage.setItem('lang', next);
-  applyTranslations(next);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const lang = localStorage.getItem('lang') || 'es';
-  applyTranslations(lang);
   renderPosts();
 });
   
