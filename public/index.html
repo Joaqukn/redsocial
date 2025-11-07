@@ -59,66 +59,98 @@
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
+
 // -----------------------------
-// 🔸 SISTEMA DE IDIOMAS
+// 🌐 SISTEMA DE IDIOMAS SIMPLE Y FUNCIONAL
 // -----------------------------
 const translations = {
   es: {
-    createBtn: "Publicar 👻",
-    loadingText: "Cargando publicaciones...",
+    publish: "Publicar 👻",
+    loading: "Cargando publicaciones...",
     login: "Iniciar sesión",
     logout: "Cerrar sesión",
-    noPosts: "No hay publicaciones todavía.",
+    noPosts: "No hay publicaciones todavía."
   },
   en: {
-    createBtn: "Post 👻",
-    loadingText: "Loading posts...",
+    publish: "Post 👻",
+    loading: "Loading posts...",
     login: "Log in",
     logout: "Log out",
-    noPosts: "No posts yet.",
+    noPosts: "No posts yet."
   }
 };
 
-let currentLang = localStorage.getItem("lang") || "es";
-
-function applyTranslations(lang) {
-  document.querySelectorAll("[data-i18n]").forEach(el => {
-    const key = el.dataset.i18n;
-    if (translations[lang][key]) el.textContent = translations[lang][key];
-  });
-}
-
-// Reaplica traducción cuando algo cambia en el DOM (por ejemplo, posts)
-const observer = new MutationObserver(() => applyTranslations(currentLang));
-observer.observe(document.body, { childList: true, subtree: true });
-
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("langButton");
-  applyTranslations(currentLang);
-  btn.textContent = currentLang === "es" ? "EN" : "ES";
+  let lang = localStorage.getItem("lang") || "es";
 
-  btn.onclick = () => {
-    currentLang = currentLang === "es" ? "en" : "es";
-    localStorage.setItem("lang", currentLang);
-    applyTranslations(currentLang);
-    btn.textContent = currentLang === "es" ? "EN" : "ES";
-  };
+  // 🔸 Aplica traducciones iniciales
+  translateUI(lang);
 
+  // 🔸 Cambia idioma al hacer clic
+  btn.textContent = lang === "es" ? "EN" : "ES";
+  btn.addEventListener("click", () => {
+    lang = lang === "es" ? "en" : "es";
+    localStorage.setItem("lang", lang);
+    btn.textContent = lang === "es" ? "EN" : "ES";
+    translateUI(lang);
+  });
+
+  // 🔹 Traduce partes fijas del menú
   const navRight = document.getElementById("navRight");
   const username = localStorage.getItem("username");
   if (username) {
-    navRight.innerHTML = `<span>👤 ${username}</span>
-    <button id="logoutBtn" data-i18n="logout">${translations[currentLang].logout}</button>`;
+    navRight.innerHTML = `<span>👤 ${username}</span><button id="logoutBtn">${translations[lang].logout}</button>`;
     document.getElementById("logoutBtn").onclick = () => {
       localStorage.clear();
       location.href = "login.html";
     };
   } else {
-    navRight.innerHTML = `<a href="login.html" data-i18n="login">${translations[currentLang].login}</a>`;
+    navRight.innerHTML = `<a href="login.html">${translations[lang].login}</a>`;
   }
 
+  // 🔸 Traduce también después de renderPosts
+  const originalRender = renderPosts;
+  renderPosts = async function() {
+    await originalRender();
+    translateUI(lang);
+  };
+
   renderPosts();
-}); 
+});
+
+// -----------------------------
+// 🔹 Función que aplica las traducciones visibles
+// -----------------------------
+function translateUI(lang) {
+  const t = translations[lang];
+  
+
+  const createBtn = document.querySelector(".create-btn");
+  if (createBtn) createBtn.textContent = t.publish;
+
+
+  const loaderText = document.querySelector(".polar-loader p");
+  if (loaderText) loaderText.textContent = t.loading;
+
+ 
+  const postsContainer = document.getElementById("postsContainer");
+  if (postsContainer && postsContainer.textContent.includes("No hay publicaciones")) {
+    postsContainer.innerHTML = `<div class="center-empty card">${t.noPosts}</div>`;
+  }
+
+  const emptyCard = document.querySelector(".center-empty.card");
+  if (emptyCard) {
+    emptyCard.textContent = t.noPosts;
+  }
+
+  const navLink = document.querySelector("nav a[href='login.html']");
+  if (navLink) navLink.textContent = t.login;
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) logoutBtn.textContent = t.logout;
+}
+
+  
 
 const palabrasProhibidas = [
   "idiota","imbecil","tonto","estupido","mierda","puta","puto","forro",
