@@ -798,6 +798,7 @@ nav .nav-right button:hover {
 }
 
 
+/* 🔹 NUEVO: Botón de idioma */
 #langBtn {
   background: var(--accent-1, #06b6d4);
   color: white;
@@ -805,9 +806,8 @@ nav .nav-right button:hover {
   border-radius: 10px;
   padding: 6px 10px;
   cursor: pointer;
-  transition: background 0.2s;
-  font-family: 'Poppins', sans-serif;
   margin-left: 10px;
+  transition: background 0.2s;
 }
 #langBtn:hover {
   background: var(--accent-2, #7c3aed);
