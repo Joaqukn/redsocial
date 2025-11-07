@@ -2,18 +2,13 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <!-- 🔥 Evitar cualquier tipo de caché -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Souls Social - Inicio</title>
-
-  <!-- 🔥 Forzar que el navegador cargue siempre la versión nueva del CSS -->
-  <link rel="stylesheet" href="styles.css?v=20251105">
+  <link rel="stylesheet" href="styles.css?v=20251107">
   <script src="https://unpkg.com/lucide@latest" defer></script>
-</head>
 </head>
 <body>
 <nav>
@@ -24,7 +19,25 @@
 <main class="main-section">
   <a href="create.html" class="create-btn">Publicar 👻</a>
   <section id="postsContainer" class="posts-container">
-    <div class="center-empty card">Cargando publicaciones...</div>
+    <div id="polarLoader" class="polar-loader">
+      <div class="ice">
+        <div class="bear">
+          <div class="ear left"></div>
+          <div class="ear right"></div>
+          <div class="head">
+            <div class="face">
+              <div class="eye left"></div>
+              <div class="eye right"></div>
+              <div class="nose"></div>
+            </div>
+          </div>
+          <div class="sleep-bubble">
+            <span id="sleepText">Z...</span>
+          </div>
+        </div>
+      </div>
+      <p>Cargando publicaciones...</p>
+    </div>
   </section>
 </main>
 
@@ -32,77 +45,109 @@
   <div class="modal" id="modalContent"></div>
 </div>
 
-<!-- 🐻‍❄️ Loader Polar -->
-<div id="polarLoader" class="polar-loader">
-  <div class="ice">
-    <div class="bear">
-      <div class="ear left"></div>
-      <div class="ear right"></div>
-      <div class="head">
-        <div class="face">
-          <div class="eye left"></div>
-          <div class="eye right"></div>
-          <div class="nose"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <p>Cargando publicaciones...</p>
-</div>
-
-
-
+<div id="alertBoxContainer" style="
+  position: fixed;
+  top: 64px;
+  right: 20px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+"></div>
 
 <script>
+/* ---------------------------
+   VARIABLES / UTILIDADES
+   --------------------------- */
 const modalOverlay = document.getElementById('modalOverlay');
 const modalContent = document.getElementById('modalContent');
+function showModal(html){ modalContent.innerHTML = html; modalOverlay.classList.add('active'); }
+function closeModal(){ modalOverlay.classList.remove('active'); }
+modalOverlay.addEventListener('click', e => { if(e.target===modalOverlay) closeModal(); });
 
-function showModal(html) {
-  modalContent.innerHTML = html;
-  modalOverlay.classList.add('active');
+/* ---------------------------
+   SISTEMA ANTI-INSULTOS
+   --------------------------- */
+const palabrasProhibidas = [
+  "idiota","imbecil","tonto","estupido","mierda","puta","puto","forro",
+  "gil","pajero","concha","pelotudo","marica","rata","zorra","tarado",
+  "mugroso","asco","prostituta","basura"
+];
+function contieneInsultos(texto){
+  if(!texto) return false;
+  const t = texto.toLowerCase();
+  return palabrasProhibidas.some(p => t.includes(p));
 }
-function closeModal() { modalOverlay.classList.remove('active'); }
-modalOverlay.addEventListener('click', e => { if(e.target === modalOverlay) closeModal(); });
 
-document.addEventListener('DOMContentLoaded', () => {
-  const navRight = document.getElementById('navRight');
-  const username = localStorage.getItem('username');
+/* ---------------------------
+   ALERT BOX
+   --------------------------- */
+function showAlert(msg, type="warn"){
+  const box=document.createElement("div");
+  box.textContent=msg;
+  box.style.cssText=`
+    padding:10px 14px;border-radius:10px;
+    font-family:'Poppins',sans-serif;
+    color:#fff;background:${type==="error"?"#ff4b4b":type==="success"?"#28a745":"#f5a623"};
+    box-shadow:0 6px 18px rgba(0,0,0,0.35);
+    opacity:0;transform:translateY(-6px);
+    transition:all 230ms ease;max-width:320px;
+  `;
+  const cont=document.getElementById("alertBoxContainer");
+  cont.appendChild(box);
+  requestAnimationFrame(()=>{box.style.opacity="1";box.style.transform="translateY(0)";});
+  setTimeout(()=>{box.style.opacity="0";box.style.transform="translateY(-6px)";
+    setTimeout(()=>box.remove(),260);
+  },4000);
+}
+
+/* ---------------------------
+   LOGIN Y POSTS
+   --------------------------- */
+document.addEventListener('DOMContentLoaded',()=>{
+  const navRight=document.getElementById('navRight');
+  const username=localStorage.getItem('username');
   if(username){
-    navRight.innerHTML = `<span>👤 ${username}</span><button id="logoutBtn">Cerrar sesión</button>`;
-    document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); location.href='login.html'; };
-  } else { navRight.innerHTML = `<a href="login.html">Iniciar sesión</a>`; }
+    navRight.innerHTML=`<span>👤 ${username}</span><button id="logoutBtn">Cerrar sesión</button>`;
+    document.getElementById('logoutBtn').onclick=()=>{localStorage.clear();location.href='login.html';};
+  }else navRight.innerHTML=`<a href="login.html">Iniciar sesión</a>`;
   renderPosts();
 });
 
+/* ---------------------------
+   RENDER POSTS
+   --------------------------- */
 async function renderPosts(){
-   const loader = document.getElementById('polarLoader');
-   loader.classList.remove('hidden');
-
-  try {
-    const res = await fetch('/api/posts');
-    const posts = await res.json();
-    const postsContainer = document.getElementById('postsContainer');
-    const currentUser = localStorage.getItem('username');
-    const isAdmin = currentUser==='admin';
-  
+  const loader=document.getElementById('polarLoader');
+  loader.classList.remove('hidden');
+  try{
+    const res=await fetch('/api/posts');
+    const posts=await res.json();
+    const postsContainer=document.getElementById('postsContainer');
+    const currentUser=localStorage.getItem('username');
+    const isAdmin=currentUser==='admin';
 
     if(!posts.length){
-      postsContainer.innerHTML = '<div class="center-empty card">No hay publicaciones todavía.</div>';
-      return;
-      loader.classList.add('hidden');
+      postsContainer.innerHTML='<div class="center-empty card">No hay publicaciones todavía.</div>';
+      loader.classList.add('hidden');return;
     }
 
-    postsContainer.innerHTML = posts.map(post=> {
-      const comments = post.comments || [];
-      return `
-      <article class="post-card" id="post-${post._id}">
+    postsContainer.innerHTML=posts.map(post=>{
+      const comments=post.comments||[];
+      const texto=`${post.title||''} ${post.text||''}`;
+      const betada=contieneInsultos(texto);
+      if(betada && !(currentUser===post.user||isAdmin)){
+        return `<article class="post-card betada">
+          <h3>Publicación Betada 🚫</h3>
+          <p>Esta publicación ha sido ocultada por uso de lenguaje inapropiado.</p>
+        </article>`;
+      }
+      return `<article class="post-card ${betada?'post-warn':''}" id="post-${post._id}">
         <div class="post-header">
           <div class="post-user">
             <div class="post-avatar" data-username="${post.user}">${(post.user||'A').charAt(0).toUpperCase()}</div>
-            <div>
-              <div class="user-name" data-username="${post.user}">${post.user}</div>
-              <div class="post-date">${new Date(post.created_at||Date.now()).toLocaleString()}</div>
-            </div>
+            <div><div class="user-name" data-username="${post.user}">${post.user}</div>
+            <div class="post-date">${new Date(post.created_at||Date.now()).toLocaleString()}</div></div>
           </div>
           ${(currentUser===post.user||isAdmin)?`
           <div class="post-controls">
@@ -116,8 +161,8 @@ async function renderPosts(){
         <div class="post-content">
           <h3>${post.title||'(Sin título)'}</h3>
           <p>${(post.text||'').replaceAll('<','&lt;').replaceAll('>','&gt;')}</p>
-          <!-- Usamos imageBase64 primero, luego image -->
-          ${(post.imageBase64 || post.image) ? `<img src="${post.imageBase64 || post.image}" class="post-image" loading="lazy">` : ''}
+          ${(post.imageBase64||post.image)?`<img src="${post.imageBase64||post.image}" class="post-image" loading="lazy">`:''}
+          ${betada?`<p style="color:#ffb84d;font-size:0.9em;margin-top:8px;">⚠️ Contiene lenguaje inapropiado (solo autor/admin pueden verla).</p>`:''}
         </div>
         <div class="post-actions">
           <button class="like-btn" data-post-id="${post._id}">❤️ ${post.likes||0}</button>
@@ -125,224 +170,183 @@ async function renderPosts(){
         </div>
       </article>`;
     }).join('');
-
     attachPostHandlers();
-  } catch(err){
-    console.error(err);
-    document.getElementById('postsContainer').innerHTML='<div class="center-empty card">Error al cargar publicaciones.</div>';
-    } finally {
-    loader.classList.add('hidden');
-  }
+  }catch(err){
+    console.error(err);showAlert("❌ Error al cargar publicaciones","error");
+  }finally{loader.classList.add('hidden');}
 }
 
+/* ---------------------------
+   HANDLERS
+   --------------------------- */
 function attachPostHandlers(){
-  const postsContainer = document.getElementById('postsContainer');
-  const currentUser = localStorage.getItem('username');
-  const isAdmin = currentUser==='admin';
+  const container=document.getElementById('postsContainer');
+  const currentUser=localStorage.getItem('username');
+  const isAdmin=currentUser==='admin';
 
-  postsContainer.addEventListener('click', async e=>{
-    const target = e.target;
+  container.addEventListener('click',async e=>{
+    const t=e.target;
 
-    // --- LIKE ---
-    if(target.classList.contains('like-btn')){
-      const postId = target.dataset.postId;
-      if(!currentUser){ alert('Debes iniciar sesión'); return; }
-      const res = await fetch(`/api/posts/${postId}/like`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ username:currentUser })
+    // LIKE
+    if(t.classList.contains('like-btn')){
+      const postId=t.dataset.postId;
+      if(!currentUser){showAlert("⚠️ Debes iniciar sesión","warn");return;}
+      const r=await fetch(`/api/posts/${postId}/like`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:currentUser})
       });
-      const data = await res.json();
-      target.textContent = `❤️ ${data.likes||0}`;
+      const d=await r.json();
+      t.textContent=`❤️ ${d.likes||0}`;
       return;
     }
 
-    // --- VER PERFIL ---
-    const el = target.closest('.post-avatar, .user-name');
-    if(el){
-      const username = el.dataset.username;
-      const res = await fetch(`/api/users/${encodeURIComponent(username)}`);
-      if(!res.ok){ showModal(`<p style="color:#ff5555">Usuario no encontrado</p>`); return; }
-      const userData = await res.json();
-      const avatarHTML = userData.avatar
-        ? `<img src="${userData.avatar}" class="profile-avatar-img">`
-        : `<div class="profile-avatar">${userData.username.charAt(0).toUpperCase()}</div>`;
-      showModal(`
-        <div class="profile-card-horizontal">
-          ${avatarHTML}
-          <div class="profile-info">
-            <h3>${userData.username}</h3>
-            <p>${userData.bio || '(Sin bio)'}</p>
-            <p>Publicaciones: ${userData.postsCount || 0}</p>
-            <p>Seguidores: ${userData.followers || 0}</p>
-            <button class="confirm" id="addFriendBtn">Agregar amigo</button>
-            <button class="confirm" id="followBtn">Seguir</button>
-          </div>
-        </div>
-      `);
-      document.getElementById('addFriendBtn').onclick = () => { alert(`Solicitud de amistad enviada a ${userData.username}`); };
-      document.getElementById('followBtn').onclick = () => { alert(`Ahora sigues a ${userData.username}`); };
+    // PERFIL
+    const u=t.closest('.post-avatar,.user-name');
+    if(u){
+      const username=u.dataset.username;
+      const r=await fetch(`/api/users/${encodeURIComponent(username)}`);
+      if(!r.ok){showAlert("❌ Usuario no encontrado","error");return;}
+      const userData=await r.json();
+      const avatar=userData.avatar?`<img src="${userData.avatar}" class="profile-avatar-img">`:`<div class="profile-avatar">${userData.username.charAt(0).toUpperCase()}</div>`;
+      showModal(`<div class="profile-card-horizontal">
+        ${avatar}
+        <div class="profile-info">
+          <h3>${userData.username}</h3>
+          <p>${userData.bio||'(Sin bio)'}</p>
+          <p>Publicaciones:${userData.postsCount||0}</p>
+          <p>Seguidores:${userData.followers||0}</p>
+        </div></div>`);
       return;
     }
 
-    // --- POPUP 3 PUNTOS ---
-    if(target.classList.contains('more-btn')){
-      const postId = target.dataset.id;
-      const popup = document.getElementById(`popup-${postId}`);
+    // POPUP
+    if(t.classList.contains('more-btn')){
+      const postId=t.dataset.id;
+      const popup=document.getElementById(`popup-${postId}`);
+      if(!popup)return;
       popup.classList.toggle('active');
-      document.addEventListener('click', function clickOutside(event){
-        if(!popup.contains(event.target)&&event.target!==target){
+      document.addEventListener('click',function clickOutside(ev){
+        if(!popup.contains(ev.target)&&ev.target!==t){
           popup.classList.remove('active');
-          document.removeEventListener('click', clickOutside);
+          document.removeEventListener('click',clickOutside);
         }
       });
       return;
     }
 
-    // --- EDITAR ---
-    if(target.classList.contains('edit-post')){
-      const postId = target.dataset.id;
-      const oldTitle = target.dataset.title;
-      const oldText = target.dataset.text;
-      showModal(`
-        <h3>Editar Publicación</h3>
-        <input id="editTitle" type="text" value="${oldTitle}" placeholder="Título">
-        <textarea id="editText">${oldText}</textarea>
+    // EDITAR
+    if(t.classList.contains('edit-post')){
+      const id=t.dataset.id;
+      const oldT=t.dataset.title||'', oldTxt=t.dataset.text||'';
+      showModal(`<h3>Editar Publicación</h3>
+        <input id="editTitle" type="text" value="${oldT}" placeholder="Título">
+        <textarea id="editText">${oldTxt}</textarea>
         <button class="confirm" id="saveEdit">Guardar</button>
-        <button class="cancel" id="cancelEdit">Cancelar</button>
-      `);
-      document.getElementById('saveEdit').onclick = async ()=>{
-        const title = document.getElementById('editTitle').value.trim();
-        const text = document.getElementById('editText').value.trim();
-        await fetch(`/api/posts/${postId}`,{
-          method:'PUT',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({title,text})
+        <button class="cancel" id="cancelEdit">Cancelar</button>`);
+      document.getElementById('saveEdit').onclick=async()=>{
+        const newT=document.getElementById('editTitle').value.trim();
+        const newTxt=document.getElementById('editText').value.trim();
+        if(contieneInsultos(`${newT} ${newTxt}`)){
+          showAlert("⚠️ No se permiten insultos.","error");
+          return;
+        }
+        await fetch(`/api/posts/${id}`,{
+          method:'PUT',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({title:newT,text:newTxt})
         });
-        const postCard = document.getElementById(`post-${postId}`);
-        postCard.querySelector('h3').textContent = title||'(Sin título)';
-        postCard.querySelector('.post-content p').textContent = text;
-        target.dataset.title = title;
-        target.dataset.text = text;
+        const card=document.getElementById(`post-${id}`);
+        if(card){
+          card.querySelector('h3').textContent=newT||'(Sin título)';
+          card.querySelector('.post-content p').textContent=newTxt;
+          card.classList.remove('post-warn'); // 🔥 DESBLOQUEO instantáneo
+        }
         closeModal();
+        showAlert("✅ Publicación actualizada y desbloqueada","success");
       };
-      document.getElementById('cancelEdit').onclick = closeModal;
+      document.getElementById('cancelEdit').onclick=closeModal;
       return;
     }
 
-    // --- ELIMINAR ---
-    if(target.classList.contains('delete-post')){
-      const postId = target.dataset.id;
-      showModal(`
-        <h3>Eliminar Publicación</h3>
-        <p>¿Estás seguro?</p>
+    // ELIMINAR
+    if(t.classList.contains('delete-post')){
+      const id=t.dataset.id;
+      showModal(`<h3>Eliminar Publicación</h3><p>¿Estás seguro?</p>
         <button class="confirm" id="confirmDelete">Eliminar</button>
-        <button class="cancel" id="cancelDelete">Cancelar</button>
-      `);
-      document.getElementById('confirmDelete').onclick = async ()=>{
-        await fetch(`/api/posts/${postId}`,{ method:'DELETE' });
-        const postCard = document.getElementById(`post-${postId}`);
-        if(postCard) postCard.remove();
-        const commentsList = document.getElementById('commentsList');
-        if(commentsList) commentsList.innerHTML = '';
-        closeModal();
+        <button class="cancel" id="cancelDelete">Cancelar</button>`);
+      document.getElementById('confirmDelete').onclick=async()=>{
+        await fetch(`/api/posts/${id}`,{method:'DELETE'});
+        const c=document.getElementById(`post-${id}`);
+        if(c)c.remove();
+        closeModal();showAlert("✅ Publicación eliminada","success");
       };
-      document.getElementById('cancelDelete').onclick = closeModal;
+      document.getElementById('cancelDelete').onclick=closeModal;
       return;
     }
 
-    // --- COMENTARIOS ---
-    if (target.classList.contains('focus-comment')) {
-      const postId = target.dataset.postId;
-      const postCard = document.getElementById(`post-${postId}`);
-      try {
-        const res = await fetch(`/api/posts/${postId}`);
-        if (!res.ok) { alert('Esta publicación ya no existe.'); return; }
-        const post = await res.json();
-        const comments = Array.isArray(post.comments) ? post.comments : [];
-
-        const commentsHTML = await Promise.all(comments.map(async c => {
-          let avatar = `<div class="comment-avatar">${c.user.charAt(0).toUpperCase()}</div>`;
-          try {
-            const userRes = await fetch(`/api/users/${encodeURIComponent(c.user)}`);
-            if (userRes.ok){
-              const userData = await userRes.json();
-              if(userData.avatar) avatar = `<img src="${userData.avatar}" class="comment-avatar-img">`;
-            }
-          } catch {}
-          return `
-            <div class="comment-text">
-              ${avatar}
-              <div class="comment-body">
-                <div class="comment-username">${c.user}</div>
-                <div class="comment-content">${c.text}</div>
-              </div>
-            </div>`;
-        }));
-
-        showModal(`
-          <h3>Comentarios</h3>
-          <div id="commentsList" style="max-height:250px; overflow-y:auto; margin-bottom:10px; padding:10px; border:1px solid #333; border-radius:12px; background:#0a1022;">
-            ${commentsHTML.join('') || '<p style="color:#98a3b3;">No hay comentarios todavía.</p>'}
-          </div>
-          <textarea id="newComment" placeholder="Escribe un comentario..." style="width:100%; padding:8px; border-radius:12px; background:#081430; color:#e8f7ff; margin-bottom:10px;"></textarea>
-          <button class="confirm" id="postCommentBtn">Comentar</button>
-          <button class="cancel" id="cancelCommentBtn">Cancelar</button>
-        `);
-
-        document.getElementById('cancelCommentBtn').onclick = closeModal;
-
-        document.getElementById('postCommentBtn').onclick = async () => {
-          const username = localStorage.getItem('username');
-          const text = document.getElementById('newComment').value.trim();
-          if(!username){ alert('Debes iniciar sesión para comentar.'); return; }
-          if(!text){ alert('El comentario no puede estar vacío.'); return; }
-
-          const res = await fetch(`/api/posts/${postId}/comment`, {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({ user: username, text })
-          });
-          if(!res.ok){ const err = await res.json().catch(()=>({message:'Error desconocido'})); alert(err.message); return; }
-
-          const commentsList = document.getElementById('commentsList');
-          if(!commentsList.querySelector('p')) commentsList.innerHTML='';
-
-          const commentEl = document.createElement('div');
-          commentEl.className='comment-text';
-          commentEl.innerHTML = `
-            <div class="comment-avatar">${username.charAt(0).toUpperCase()}</div>
+    // COMENTARIOS
+    if(t.classList.contains('focus-comment')){
+      const id=t.dataset.postId;
+      const card=document.getElementById(`post-${id}`);
+      try{
+        const r=await fetch(`/api/posts/${id}`);
+        if(!r.ok){showAlert("❌ Esta publicación ya no existe","error");return;}
+        const post=await r.json();
+        const comments=Array.isArray(post.comments)?post.comments:[];
+        const list=comments.map(c=>`
+          <div class="comment-text">
+            <div class="comment-avatar">${c.user.charAt(0).toUpperCase()}</div>
             <div class="comment-body">
-              <div class="comment-username">${username}</div>
-              <div class="comment-content">${text}</div>
-            </div>`;
-          commentsList.prepend(commentEl);
-
-          const commentBtn = postCard.querySelector('.focus-comment');
-          const currentCount = parseInt(commentBtn.textContent.split(' ')[1]||0);
-          commentBtn.textContent=`💬 ${currentCount+1}`;
+              <div class="comment-username">${c.user}</div>
+              <div class="comment-content">${c.text}</div>
+            </div></div>`).join('');
+        showModal(`<h3>Comentarios</h3>
+          <div id="commentsList" style="max-height:250px;overflow-y:auto;margin-bottom:10px;padding:10px;border:1px solid #333;border-radius:12px;background:#0a1022;">
+            ${list||'<p style="color:#98a3b3;">No hay comentarios todavía.</p>'}
+          </div>
+          <textarea id="newComment" placeholder="Escribe un comentario..." style="width:100%;padding:8px;border-radius:12px;background:#081430;color:#e8f7ff;margin-bottom:10px;"></textarea>
+          <button class="confirm" id="postCommentBtn">Comentar</button>
+          <button class="cancel" id="cancelCommentBtn">Cancelar</button>`);
+        document.getElementById('cancelCommentBtn').onclick=closeModal;
+        document.getElementById('postCommentBtn').onclick=async()=>{
+          const u=localStorage.getItem('username');
+          const text=document.getElementById('newComment').value.trim();
+          if(!u){showAlert("⚠️ Debes iniciar sesión","warn");return;}
+          if(!text){showAlert("⚠️ El comentario no puede estar vacío","warn");return;}
+          if(contieneInsultos(text)){showAlert("⚠️ Tu comentario contiene lenguaje inapropiado","error");return;}
+          const r2=await fetch(`/api/posts/${id}/comment`,{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({user:u,text})
+          });
+          if(!r2.ok){showAlert("❌ Error al enviar comentario","error");return;}
+          const list=document.getElementById('commentsList');
+          const el=document.createElement('div');
+          el.className='comment-text';
+          el.innerHTML=`<div class="comment-avatar">${u.charAt(0).toUpperCase()}</div>
+            <div class="comment-body"><div class="comment-username">${u}</div>
+            <div class="comment-content">${text}</div></div>`;
+          list.prepend(el);
+          const btn=card.querySelector('.focus-comment');
+          const n=parseInt(btn.textContent.split(' ')[1]||0);
+          btn.textContent=`💬 ${n+1}`;
           document.getElementById('newComment').value='';
+          showAlert("✅ Comentario publicado","success");
         };
-
-      } catch(err){
-        console.error('Error cargando comentarios:', err);
-        alert('Error cargando comentarios');
-      }
+      }catch(err){console.error(err);showAlert("❌ Error cargando comentarios","error");}
     }
   });
-} 
+}
+
+/* --- Animación Z --- */
+const sleepText=document.getElementById("sleepText");
+const zPhases=["Z...","Zz..","ZzZ.","ZzZz"];
+let i=0;
+setInterval(()=>{sleepText.textContent=zPhases[i];i=(i+1)%zPhases.length;},700);
 </script>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-  const socket = io();
-
-  // 🔥 Cuando se detecten cambios en el servidor:
-  socket.on('postsUpdated', () => {
-    console.log('📡 Actualización en vivo recibida → recargando posts');
-    renderPosts();
-  });
+const socket=io();
+socket.on('postsUpdated',()=>{renderPosts();});
 </script>
-
 </body>
 </html>
