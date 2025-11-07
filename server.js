@@ -284,11 +284,35 @@ app.get(/.*/, (req, res) => {
 });
 
 
-app.get('/api/users/:username/avatar', async (req, res) => {
-  const username = req.params.username;
-  const user = await User.findOne({ username });
-  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
-  res.json({ avatar: user.avatar || null });
+
+
+app.get('/api/profile/:username', async (req, res) => {
+  try {
+    const user = await connection.collection('users').findOne(
+      { username: req.params.username },
+      { projection: { username: 1, bio: 1, avatarBase64: 1, name: 1, language: 1 } }
+    );
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener perfil' });
+  }
+});
+
+
+app.put('/api/users/:username', async (req, res) => {
+  try {
+    const { bio, avatarBase64, name, language } = req.body;
+    await connection.collection('users').updateOne(
+      { username: req.params.username },
+      { $set: { bio, avatarBase64, name, language: language || 'es' } }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al actualizar perfil' });
+  }
 });
 
 

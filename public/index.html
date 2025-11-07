@@ -344,6 +344,73 @@ function attachPostHandlers(){
   });
 }
 
+const translations = {
+    es: {
+      publicar: "Publicar 👻",
+      cargando: "Cargando publicaciones...",
+      noPosts: "No hay publicaciones todavía.",
+      mustLogin: "⚠️ Debes iniciar sesión",
+      badLang: "⚠️ Tu comentario contiene lenguaje inapropiado",
+      emptyComment: "⚠️ El comentario no puede estar vacío",
+      errorComment: "❌ Error al enviar comentario",
+      commentOK: "✅ Comentario publicado",
+      deleted: "✅ Publicación eliminada",
+      edited: "✅ Publicación actualizada y desbloqueada",
+      errorLoad: "❌ Error al cargar publicaciones",
+      badWords: "⚠️ No se permiten insultos.",
+      userNotFound: "❌ Usuario no encontrado",
+      noComments: "No hay comentarios todavía.",
+      comentarios: "Comentarios",
+      cancel: "Cancelar",
+      send: "Comentar"
+    },
+    en: {
+      publicar: "Post 👻",
+      cargando: "Loading posts...",
+      noPosts: "No posts yet.",
+      mustLogin: "⚠️ You must log in",
+      badLang: "⚠️ Your comment contains inappropriate language",
+      emptyComment: "⚠️ Comment cannot be empty",
+      errorComment: "❌ Error sending comment",
+      commentOK: "✅ Comment posted",
+      deleted: "✅ Post deleted",
+      edited: "✅ Post updated and unlocked",
+      errorLoad: "❌ Error loading posts",
+      badWords: "⚠️ Insults are not allowed.",
+      userNotFound: "❌ User not found",
+      noComments: "No comments yet.",
+      comentarios: "Comments",
+      cancel: "Cancel",
+      send: "Post"
+    }
+  };
+
+  let currentLang = "es";
+
+  async function loadUserLanguage() {
+    const username = localStorage.getItem("username");
+    if (!username) return;
+    try {
+      const res = await fetch(`/api/user/lang/${encodeURIComponent(username)}`);
+      if (res.ok) {
+        const data = await res.json();
+        currentLang = data.language || "es";
+        applyTranslations();
+      }
+    } catch (err) {
+      console.error("Error al cargar idioma:", err);
+    }
+  }
+
+  function applyTranslations() {
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      const key = el.getAttribute("data-i18n");
+      if (translations[currentLang][key]) {
+        el.textContent = translations[currentLang][key];
+      }
+    });
+  }
+
 /* --- Animación Z --- */
 const sleepText=document.getElementById("sleepText");
 const zPhases=["Z...","Zz..","ZzZ.","ZzZz"];
