@@ -28,32 +28,23 @@ Por eso se desarrolló SoulSocial, una plataforma propia, segura y diseñada esp
 3. Comentarios en Publicaciones  
 ✔ Tarea Realizada
 
-4. Carga y Visualización de Historias (Stories)  
+
+4. Filtro Automático de Censura  
 ✔ Tarea Realizada
 
-5. Chats Privados  
-✔ Tarea Realizada
 
-6. Filtro Automático de Censura  
-✔ Tarea Realizada
-
-7. Mejora de Navegación Basada en Bocetos Iniciales  
-✔ Tarea Realizada
-
-8. Edición de Perfil + Multilenguaje Global  
+5. Edición de Perfil + Multilenguaje Global  
 El idioma seleccionado se guarda en la base de datos y se aplica automáticamente en todas las páginas.
 ✔ Tarea Realizada
 
-9. Sección de Ayuda  
+6 Sección de Ayuda  
 ✔ Tarea Realizada
 
-10. Persistencia de Sesión y Estado  
+7. Persistencia de Sesión y Estado  
 ✔ Tarea Realizada
 
-11. Sistema de Historias con Duración Automática  
-✔ Tarea Realizada
 
-12. Conexión con Base de Datos (MongoDB Atlas)  
+8. Conexión con Base de Datos (MongoDB Atlas)  
 ✔ Tarea Realizada
 
 ## Tecnologías Utilizadas
